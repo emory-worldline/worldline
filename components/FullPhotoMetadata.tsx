@@ -47,7 +47,7 @@ export default function ComprehensivePhotoMetadata() {
         media.assets.map(async (asset) => {
           const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
           return assetInfo as FullPhotoMetadata;
-        })
+        }),
       );
 
       setPhotos(photosWithMetadata);

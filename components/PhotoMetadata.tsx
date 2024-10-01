@@ -40,7 +40,7 @@ export default function PhotoMetadata() {
             creationTime: assetInfo.creationTime || null,
             location: assetInfo.location,
           };
-        })
+        }),
       );
 
       // set state
