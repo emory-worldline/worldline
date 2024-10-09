@@ -42,6 +42,12 @@
             "deploymentTarget": "18.0"
           }
         }
+      ],
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMAPboxMapsDownloadToken":"sk.eyJ1IjoiYm1pbGwiLCJhIjoiY20yMWd5eGMyMDE5cjJqcHJ6MXgyNDczOSJ9.-4Pro0oqrAWjenCVEnGFgw"
+        }
       ]
     ],
     "experiments": {
