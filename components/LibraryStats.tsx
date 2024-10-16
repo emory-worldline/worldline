@@ -3,11 +3,13 @@ import { View, Text, Button, ScrollView, Alert } from "react-native";
 import * as MediaLibrary from "expo-media-library";
 
 const BATCH_SIZE = 10;
-const MAX_PHOTOS = 300;
+const MAX_MEDIA = 300;
 
-interface PhotoStats {
+interface MediaStats {
   localPhotos: number;
+  localVideos: number;
   networkPhotos: number;
+  networkVideos: number;
   orientations: { [key: string]: number };
   aspectRatios: { [key: string]: number };
   fileTypes: { [key: string]: number };
@@ -15,14 +17,18 @@ interface PhotoStats {
   timeOfDay: { [key: string]: number };
   cameraModels: { [key: string]: number };
   lensModels: { [key: string]: number };
-  highestPhoto: number;
-  lowestPhoto: number;
-  fastestPhoto: number;
+  highest: number;
+  lowest: number;
+  fastest: number;
+  totalVideoDuration: number;
+  longestVideo: number;
 }
 
-const initialPhotoStats: PhotoStats = {
+const initialMediaStats: MediaStats = {
   localPhotos: 0,
+  localVideos: 0,
   networkPhotos: 0,
+  networkVideos: 0,
   orientations: {},
   aspectRatios: {},
   fileTypes: {},
@@ -30,9 +36,11 @@ const initialPhotoStats: PhotoStats = {
   timeOfDay: {},
   cameraModels: {},
   lensModels: {},
-  highestPhoto: 0,
-  lowestPhoto: Infinity,
-  fastestPhoto: 0,
+  highest: 0,
+  lowest: Infinity,
+  fastest: 0,
+  totalVideoDuration: 0,
+  longestVideo: 0,
 };
 
 type ExifInfo = {
@@ -45,18 +53,23 @@ function getFileType(filename: string): string {
     jpg: "JPEG",
     jpeg: "JPEG",
     png: "PNG",
+    dng: "RAW",
     heic: "HEIC",
     gif: "GIF",
     tiff: "TIFF",
     bmp: "BMP",
+    mp4: "MP4",
+    mov: "MOV",
+    avi: "AVI",
+    mkv: "MKV",
   };
   return typeMap[extension] || "Unknown";
 }
 
 function getOrientation(width: number, height: number): string {
-  if (width > height) return "landscape";
-  if (height > width) return "portrait";
-  return "square";
+  if (width > height) return "Landscape";
+  if (height > width) return "Portrait";
+  return "Square";
 }
 
 function getAspectRatio(width: number, height: number): string {
@@ -73,13 +86,13 @@ function getTimeOfDay(hour: number): string {
 }
 
 const LibraryAnalyzer: React.FC = () => {
-  const [stats, setStats] = useState<PhotoStats | null>(null);
+  const [stats, setStats] = useState<MediaStats | null>(null);
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
 
   const processAsset = async (
     asset: MediaLibrary.Asset,
-    photoStats: PhotoStats,
+    mediaStats: MediaStats,
   ) => {
     try {
       const assetInfo = await MediaLibrary.getAssetInfoAsync(asset, {
@@ -87,37 +100,48 @@ const LibraryAnalyzer: React.FC = () => {
       });
 
       if (assetInfo.isNetworkAsset) {
-        photoStats.networkPhotos++;
+        asset.mediaType === MediaLibrary.MediaType.photo
+          ? mediaStats.networkPhotos++
+          : mediaStats.networkVideos++;
         return;
       }
 
-      photoStats.localPhotos++;
+      if (asset.mediaType === MediaLibrary.MediaType.photo) {
+        mediaStats.localPhotos++;
+      } else {
+        mediaStats.localVideos++;
+        mediaStats.totalVideoDuration += asset.duration;
+        mediaStats.longestVideo = Math.max(
+          mediaStats.longestVideo,
+          asset.duration,
+        );
+      }
 
       // File type
       const fileType = getFileType(asset.filename);
-      photoStats.fileTypes[fileType] =
-        (photoStats.fileTypes[fileType] || 0) + 1;
+      mediaStats.fileTypes[fileType] =
+        (mediaStats.fileTypes[fileType] || 0) + 1;
 
       // Creation year
       const year = new Date(asset.creationTime).getFullYear().toString();
-      photoStats.creationYears[year] =
-        (photoStats.creationYears[year] || 0) + 1;
+      mediaStats.creationYears[year] =
+        (mediaStats.creationYears[year] || 0) + 1;
 
       // Time of day
       const hour = new Date(asset.creationTime).getHours();
       const timeOfDay = getTimeOfDay(hour);
-      photoStats.timeOfDay[timeOfDay] =
-        (photoStats.timeOfDay[timeOfDay] || 0) + 1;
+      mediaStats.timeOfDay[timeOfDay] =
+        (mediaStats.timeOfDay[timeOfDay] || 0) + 1;
 
       // Orientation
       const orientation = getOrientation(asset.width, asset.height);
-      photoStats.orientations[orientation] =
-        (photoStats.orientations[orientation] || 0) + 1;
+      mediaStats.orientations[orientation] =
+        (mediaStats.orientations[orientation] || 0) + 1;
 
       // Aspect ratio
       const aspectRatio = getAspectRatio(asset.width, asset.height);
-      photoStats.aspectRatios[aspectRatio] =
-        (photoStats.aspectRatios[aspectRatio] || 0) + 1;
+      mediaStats.aspectRatios[aspectRatio] =
+        (mediaStats.aspectRatios[aspectRatio] || 0) + 1;
 
       if (assetInfo.exif) {
         const exif = assetInfo.exif as ExifInfo;
@@ -125,27 +149,27 @@ const LibraryAnalyzer: React.FC = () => {
         // Camera Model
         const cameraModel = exif["{TIFF}"]?.Model;
         if (typeof cameraModel === "string") {
-          photoStats.cameraModels[cameraModel] =
-            (photoStats.cameraModels[cameraModel] || 0) + 1;
+          mediaStats.cameraModels[cameraModel] =
+            (mediaStats.cameraModels[cameraModel] || 0) + 1;
         }
 
         // Lens Model
         const lensModel = exif["{Exif}"]?.LensModel;
         if (typeof lensModel === "string") {
-          photoStats.lensModels[lensModel] =
-            (photoStats.lensModels[lensModel] || 0) + 1;
+          mediaStats.lensModels[lensModel] =
+            (mediaStats.lensModels[lensModel] || 0) + 1;
         }
 
         // GPS
         const altitude = Number(exif["{GPS}"]?.Altitude);
         if (!isNaN(altitude)) {
-          photoStats.highestPhoto = Math.max(photoStats.highestPhoto, altitude);
-          photoStats.lowestPhoto = Math.min(photoStats.lowestPhoto, altitude);
+          mediaStats.highest = Math.max(mediaStats.highest, altitude);
+          mediaStats.lowest = Math.min(mediaStats.lowest, altitude);
         }
 
         const speed = Number(exif["{GPS}"]?.Speed);
         if (!isNaN(speed)) {
-          photoStats.fastestPhoto = Math.max(photoStats.fastestPhoto, speed);
+          mediaStats.fastest = Math.max(mediaStats.fastest, speed);
         }
       }
     } catch (assetError) {
@@ -153,7 +177,7 @@ const LibraryAnalyzer: React.FC = () => {
     }
   };
 
-  const analyzePhotoLibrary = useCallback(async () => {
+  const analyzeMediaLibrary = useCallback(async () => {
     setProcessing(true);
     setProgress(0);
     setStats(null);
@@ -164,13 +188,17 @@ const LibraryAnalyzer: React.FC = () => {
         throw new Error("Permission to access media library was denied");
       }
 
-      let photoStats: PhotoStats = { ...initialPhotoStats };
+      let mediaStats: MediaStats = { ...initialMediaStats };
       let hasNextPage = true;
       let endCursor: string | undefined;
 
       while (
         hasNextPage &&
-        photoStats.localPhotos + photoStats.networkPhotos < MAX_PHOTOS
+        mediaStats.localPhotos +
+          mediaStats.localVideos +
+          mediaStats.networkPhotos +
+          mediaStats.networkVideos <
+          MAX_MEDIA
       ) {
         const {
           assets,
@@ -179,32 +207,46 @@ const LibraryAnalyzer: React.FC = () => {
         } = await MediaLibrary.getAssetsAsync({
           first: BATCH_SIZE,
           after: endCursor,
-          mediaType: MediaLibrary.MediaType.photo,
+          mediaType: [
+            MediaLibrary.MediaType.photo,
+            MediaLibrary.MediaType.video,
+          ],
           sortBy: [MediaLibrary.SortBy.creationTime],
         });
 
         await Promise.all(
-          assets.map((asset) => processAsset(asset, photoStats)),
+          assets.map((asset) => processAsset(asset, mediaStats)),
         );
 
-        setStats({ ...photoStats });
-        setProgress(photoStats.localPhotos + photoStats.networkPhotos);
+        setStats({ ...mediaStats });
+        setProgress(
+          mediaStats.localPhotos +
+            mediaStats.localVideos +
+            mediaStats.networkPhotos +
+            mediaStats.networkVideos,
+        );
 
         hasNextPage = newHasNextPage;
         endCursor = newEndCursor;
       }
 
-      if (photoStats.localPhotos + photoStats.networkPhotos >= MAX_PHOTOS) {
+      if (
+        mediaStats.localPhotos +
+          mediaStats.localVideos +
+          mediaStats.networkPhotos +
+          mediaStats.networkVideos >=
+        MAX_MEDIA
+      ) {
         Alert.alert(
           "Analysis Limit Reached",
-          `Analyzed ${MAX_PHOTOS} photos. Some photos may not be included in the stats.`,
+          `Analyzed ${MAX_MEDIA} media items. Some items may not be included in the stats.`,
         );
       }
     } catch (error) {
-      console.error("Error analyzing photo library:", error);
+      console.error("Error analyzing media library:", error);
       Alert.alert(
         "Error",
-        "An error occurred while analyzing the photo library. Please try again.",
+        "An error occurred while analyzing the media library. Please try again.",
       );
     } finally {
       setProcessing(false);
@@ -214,41 +256,62 @@ const LibraryAnalyzer: React.FC = () => {
   return (
     <ScrollView style={{ flex: 1, padding: 20 }}>
       {!processing && !stats && (
-        <Button title="Analyze Photo Library" onPress={analyzePhotoLibrary} />
+        <Button title="Analyze Media Library" onPress={analyzeMediaLibrary} />
       )}
-      {processing && <Text>Processing... {progress} photos analyzed</Text>}
+      {processing && <Text>Processing... {progress} items analyzed</Text>}
       {stats && (
         <View>
           <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
-            Photo Library Stats
+            Media Library Stats
           </Text>
-          <Text>Total Photos: {stats.localPhotos + stats.networkPhotos}</Text>
+          <Text style={{ fontWeight: "bold", marginTop: 10 }}>
+            Total Media:{" "}
+            {stats.localPhotos +
+              stats.localVideos +
+              stats.networkPhotos +
+              stats.networkVideos}
+          </Text>
           <Text>Local Photos: {stats.localPhotos}</Text>
           <Text>Network Photos: {stats.networkPhotos}</Text>
-          <Text>Highest: {stats.highestPhoto.toFixed(2)} meters</Text>
+          <Text>Local Videos: {stats.localVideos}</Text>
+          <Text>Network Videos: {stats.networkVideos}</Text>
+          <Text>
+            Total Video Duration: {(stats.totalVideoDuration / 60).toFixed(2)}{" "}
+            minutes
+          </Text>
+          <Text>
+            Longest Video Duration: {(stats.longestVideo / 60).toFixed(2)}{" "}
+            minutes
+          </Text>
+          <Text style={{ fontWeight: "bold", marginTop: 10 }}>Extremes:</Text>
+          <Text>Highest: {stats.highest.toFixed(2)} meters</Text>
           <Text>
             Lowest:{" "}
-            {stats.lowestPhoto === Infinity
+            {stats.lowest === Infinity
               ? "N/A"
-              : stats.lowestPhoto.toFixed(2) + " meters"}
+              : stats.lowest.toFixed(2) + " meters"}
           </Text>
-          <Text>Fastest: {stats.fastestPhoto.toFixed(2)} km/h</Text>
+          <Text>Fastest: {stats.fastest.toFixed(2)} km/h</Text>
 
           <Text style={{ fontWeight: "bold", marginTop: 10 }}>File Types:</Text>
-          {Object.entries(stats.fileTypes).map(([type, count]) => (
-            <Text key={type}>
-              {type}: {count}
-            </Text>
-          ))}
+          {Object.entries(stats.fileTypes)
+            .sort((a, b) => b[1] - a[1])
+            .map(([ratio, count]) => (
+              <Text key={ratio}>
+                {ratio}: {count}
+              </Text>
+            ))}
 
           <Text style={{ fontWeight: "bold", marginTop: 10 }}>
             Orientations:
           </Text>
-          {Object.entries(stats.orientations).map(([orientation, count]) => (
-            <Text key={orientation}>
-              {orientation}: {count}
-            </Text>
-          ))}
+          {Object.entries(stats.orientations)
+            .sort((a, b) => b[1] - a[1])
+            .map(([orientation, count]) => (
+              <Text key={orientation}>
+                {orientation}: {count}
+              </Text>
+            ))}
 
           <Text style={{ fontWeight: "bold", marginTop: 10 }}>
             Top 5 Aspect Ratios:
@@ -286,9 +349,7 @@ const LibraryAnalyzer: React.FC = () => {
               </Text>
             ))}
 
-          <Text style={{ fontWeight: "bold", marginTop: 10 }}>
-            Photos by Year:
-          </Text>
+          <Text style={{ fontWeight: "bold", marginTop: 10 }}>By Year:</Text>
           {Object.entries(stats.creationYears)
             .sort(([a], [b]) => Number(b) - Number(a))
             .map(([year, count]) => (
@@ -298,7 +359,7 @@ const LibraryAnalyzer: React.FC = () => {
             ))}
 
           <Text style={{ fontWeight: "bold", marginTop: 10 }}>
-            Photos by Time of Day:
+            By Time of Day:
           </Text>
           {Object.entries(stats.timeOfDay).map(([time, count]) => (
             <Text key={time}>
