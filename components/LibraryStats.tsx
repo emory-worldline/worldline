@@ -3,10 +3,11 @@ import { View, Text, Button, ScrollView, Alert } from "react-native";
 import * as MediaLibrary from "expo-media-library";
 
 const BATCH_SIZE = 10;
-const MAX_PHOTOS = 100;
+const MAX_PHOTOS = 300;
 
 interface PhotoStats {
-  totalPhotos: number;
+  localPhotos: number;
+  networkPhotos: number;
   orientations: { [key: string]: number };
   aspectRatios: { [key: string]: number };
   fileTypes: { [key: string]: number };
@@ -20,7 +21,8 @@ interface PhotoStats {
 }
 
 const initialPhotoStats: PhotoStats = {
-  totalPhotos: 0,
+  localPhotos: 0,
+  networkPhotos: 0,
   orientations: {},
   aspectRatios: {},
   fileTypes: {},
@@ -29,8 +31,12 @@ const initialPhotoStats: PhotoStats = {
   cameraModels: {},
   lensModels: {},
   highestPhoto: 0,
-  lowestPhoto: 0,
+  lowestPhoto: Infinity,
   fastestPhoto: 0,
+};
+
+type ExifInfo = {
+  [key: string]: any;
 };
 
 function getFileType(filename: string): string {
@@ -66,17 +72,86 @@ function getTimeOfDay(hour: number): string {
   return "night";
 }
 
-function getNestedValues(obj: any, path: string[]): any {
-  return path.reduce(
-    (prev, curr) => (prev && prev[curr] !== undefined ? prev[curr] : undefined),
-    obj,
-  );
-}
-
 const LibraryAnalyzer: React.FC = () => {
   const [stats, setStats] = useState<PhotoStats | null>(null);
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
+
+  const processAsset = async (
+    asset: MediaLibrary.Asset,
+    photoStats: PhotoStats,
+  ) => {
+    try {
+      const assetInfo = await MediaLibrary.getAssetInfoAsync(asset, {
+        shouldDownloadFromNetwork: false,
+      });
+
+      if (assetInfo.isNetworkAsset) {
+        photoStats.networkPhotos++;
+        return;
+      }
+
+      photoStats.localPhotos++;
+
+      // File type
+      const fileType = getFileType(asset.filename);
+      photoStats.fileTypes[fileType] =
+        (photoStats.fileTypes[fileType] || 0) + 1;
+
+      // Creation year
+      const year = new Date(asset.creationTime).getFullYear().toString();
+      photoStats.creationYears[year] =
+        (photoStats.creationYears[year] || 0) + 1;
+
+      // Time of day
+      const hour = new Date(asset.creationTime).getHours();
+      const timeOfDay = getTimeOfDay(hour);
+      photoStats.timeOfDay[timeOfDay] =
+        (photoStats.timeOfDay[timeOfDay] || 0) + 1;
+
+      // Orientation
+      const orientation = getOrientation(asset.width, asset.height);
+      photoStats.orientations[orientation] =
+        (photoStats.orientations[orientation] || 0) + 1;
+
+      // Aspect ratio
+      const aspectRatio = getAspectRatio(asset.width, asset.height);
+      photoStats.aspectRatios[aspectRatio] =
+        (photoStats.aspectRatios[aspectRatio] || 0) + 1;
+
+      if (assetInfo.exif) {
+        const exif = assetInfo.exif as ExifInfo;
+
+        // Camera Model
+        const cameraModel = exif["{TIFF}"]?.Model;
+        if (typeof cameraModel === "string") {
+          photoStats.cameraModels[cameraModel] =
+            (photoStats.cameraModels[cameraModel] || 0) + 1;
+        }
+
+        // Lens Model
+        const lensModel = exif["{Exif}"]?.LensModel;
+        if (typeof lensModel === "string") {
+          photoStats.lensModels[lensModel] =
+            (photoStats.lensModels[lensModel] || 0) + 1;
+        }
+
+        // GPS
+        const altitude = Number(exif["{GPS}"]?.Altitude);
+        if (!isNaN(altitude)) {
+          photoStats.highestPhoto = Math.max(photoStats.highestPhoto, altitude);
+          photoStats.lowestPhoto = Math.min(photoStats.lowestPhoto, altitude);
+        }
+
+        const speed = Number(exif["{GPS}"]?.Speed);
+        if (!isNaN(speed)) {
+          photoStats.fastestPhoto = Math.max(photoStats.fastestPhoto, speed);
+        }
+      }
+    } catch (assetError) {
+      console.error("Error processing asset:", assetError);
+    }
+  };
 
   const analyzePhotoLibrary = useCallback(async () => {
     setProcessing(true);
@@ -93,116 +168,33 @@ const LibraryAnalyzer: React.FC = () => {
       let hasNextPage = true;
       let endCursor: string | undefined;
 
-      while (hasNextPage && photoStats.totalPhotos < MAX_PHOTOS) {
-        try {
-          const {
-            assets,
-            endCursor: newEndCursor,
-            hasNextPage: newHasNextPage,
-          } = await MediaLibrary.getAssetsAsync({
-            first: BATCH_SIZE,
-            after: endCursor,
-            mediaType: MediaLibrary.MediaType.photo,
-            sortBy: [MediaLibrary.SortBy.creationTime],
-          });
+      while (
+        hasNextPage &&
+        photoStats.localPhotos + photoStats.networkPhotos < MAX_PHOTOS
+      ) {
+        const {
+          assets,
+          endCursor: newEndCursor,
+          hasNextPage: newHasNextPage,
+        } = await MediaLibrary.getAssetsAsync({
+          first: BATCH_SIZE,
+          after: endCursor,
+          mediaType: MediaLibrary.MediaType.photo,
+          sortBy: [MediaLibrary.SortBy.creationTime],
+        });
 
-          for (const asset of assets) {
-            try {
-              const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
+        await Promise.all(
+          assets.map((asset) => processAsset(asset, photoStats)),
+        );
 
-              photoStats.totalPhotos++;
-              console.log("checking asset:", photoStats.totalPhotos);
+        setStats({ ...photoStats });
+        setProgress(photoStats.localPhotos + photoStats.networkPhotos);
 
-              // File type
-              const fileType = getFileType(asset.filename);
-              photoStats.fileTypes[fileType] =
-                (photoStats.fileTypes[fileType] || 0) + 1;
-
-              // Creation year
-              const year = new Date(asset.creationTime)
-                .getFullYear()
-                .toString();
-              photoStats.creationYears[year] =
-                (photoStats.creationYears[year] || 0) + 1;
-
-              // Time of day
-              const hour = new Date(asset.creationTime).getHours();
-              const timeOfDay = getTimeOfDay(hour);
-              photoStats.timeOfDay[timeOfDay] =
-                (photoStats.timeOfDay[timeOfDay] || 0) + 1;
-
-              // Orientation
-              const orientation = getOrientation(asset.width, asset.height);
-              photoStats.orientations[orientation] =
-                (photoStats.orientations[orientation] || 0) + 1;
-
-              // Aspect ratio
-              const aspectRatio = getAspectRatio(asset.width, asset.height);
-              photoStats.aspectRatios[aspectRatio] =
-                (photoStats.aspectRatios[aspectRatio] || 0) + 1;
-
-              if (assetInfo.exif) {
-                // Camera Model
-                const cameraModel = getNestedValues(assetInfo.exif, [
-                  "{TIFF}",
-                  "Model",
-                ]);
-                if (typeof cameraModel === "string") {
-                  photoStats.cameraModels[cameraModel] =
-                    (photoStats.cameraModels[cameraModel] || 0) + 1;
-                }
-
-                // Lens Model
-                const lensModel = getNestedValues(assetInfo.exif, [
-                  "{Exif}",
-                  "LensModel",
-                ]);
-                if (typeof lensModel === "string") {
-                  photoStats.lensModels[lensModel] =
-                    (photoStats.lensModels[lensModel] || 0) + 1;
-                }
-
-                // GPS
-                const altitude = getNestedValues(assetInfo.exif, [
-                  "{GPS}",
-                  "Altitude",
-                ]);
-                if (typeof altitude === "number") {
-                  if (altitude > photoStats.highestPhoto)
-                    photoStats.highestPhoto = altitude;
-                  if (altitude < photoStats.lowestPhoto)
-                    photoStats.lowestPhoto = altitude;
-                }
-
-                const speed = getNestedValues(assetInfo.exif, [
-                  "{GPS}",
-                  "Speed",
-                ]);
-                if (
-                  typeof speed === "number" &&
-                  speed > photoStats.fastestPhoto
-                ) {
-                  photoStats.fastestPhoto = speed;
-                }
-              }
-            } catch (assetError) {
-              console.error("Error processing asset:", assetError);
-              // Continue with the next asset
-            }
-          }
-
-          setStats({ ...photoStats });
-          setProgress(photoStats.totalPhotos);
-
-          hasNextPage = newHasNextPage;
-          endCursor = newEndCursor;
-        } catch (batchError) {
-          console.error("Error processing batch:", batchError);
-          // Continue with the next batch
-        }
+        hasNextPage = newHasNextPage;
+        endCursor = newEndCursor;
       }
 
-      if (photoStats.totalPhotos >= MAX_PHOTOS) {
+      if (photoStats.localPhotos + photoStats.networkPhotos >= MAX_PHOTOS) {
         Alert.alert(
           "Analysis Limit Reached",
           `Analyzed ${MAX_PHOTOS} photos. Some photos may not be included in the stats.`,
@@ -230,7 +222,9 @@ const LibraryAnalyzer: React.FC = () => {
           <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
             Photo Library Stats
           </Text>
-          <Text>Total Photos: {stats.totalPhotos}</Text>
+          <Text>Total Photos: {stats.localPhotos + stats.networkPhotos}</Text>
+          <Text>Local Photos: {stats.localPhotos}</Text>
+          <Text>Network Photos: {stats.networkPhotos}</Text>
           <Text>Highest: {stats.highestPhoto.toFixed(2)} meters</Text>
           <Text>
             Lowest:{" "}
