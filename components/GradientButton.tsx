@@ -1,22 +1,29 @@
 import React from "react";
-import { Text, View, StyleSheet, Pressable } from "react-native";
+import { Text, View, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
 
 type GradientButtonProps = {
   text: string;
   href: string;
+  style: {
+    buttonLink?: object;
+    buttonGradient?: object;
+    buttonText?: object;
+    buttonContainer?: object;
+  };
 };
 
 export default function GradientButton(props: GradientButtonProps) {
+  const { style } = props;
   return (
     <LinearGradient
       colors={["rgba(53,203,169,1)", "rgba(109,53,183,1)"]}
-      style={styles.gradient}
+      style={style.buttonGradient}
     >
-      <Link href={props.href} style={styles.link}>
-        <View style={styles.buttonContainer}>
-          <Text style={styles.buttonText}>{props.text}</Text>
+      <Link href={props.href} style={style.buttonLink}>
+        <View style={style.buttonContainer}>
+          <Text style={style.buttonText}>{props.text}</Text>
         </View>
       </Link>
     </LinearGradient>

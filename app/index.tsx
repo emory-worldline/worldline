@@ -1,5 +1,5 @@
-import { Link } from "expo-router";
-import { Text, View, Image, Button, StyleSheet } from "react-native";
+import { View, Image, StyleSheet } from "react-native";
+import { styles } from "./styles/IndexStyles";
 import GradientText from "@/components/GradientText";
 import GradientButton from "@/components/GradientButton";
 import PrivacyPolicyButton from "@/components/PrivacyPolicyButton";
@@ -13,16 +13,16 @@ export default function Index() {
         <Image source={Globe} style={styles.globe}></Image>
       </View>
 
-      <GradientText text="worldline" style={styles.title} />
+      <GradientText text="worldline" style={styles} />
 
-      <GradientButton text="Get Started" href="/setup" />
+      <GradientButton text="Get Started" href="/setup" style={styles} />
 
       <PrivacyPolicyButton />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const test = StyleSheet.create({
   container: {
     justifyContent: "center",
     alignItems: "center",
@@ -42,8 +42,5 @@ const styles = StyleSheet.create({
     top: -100,
     width: 500,
     height: 620,
-  },
-  buttonContainer: {
-    backgroundColor: "#FFFFFF",
   },
 });
