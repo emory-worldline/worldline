@@ -1,6 +1,6 @@
 import React from "react";
-import { Text } from "react-native";
+import LibraryAnalyzer from "@/components/LibraryStats";
 
 export default function Setup() {
-  return <Text>Setup Page</Text>;
+  return <LibraryAnalyzer />;
 }
