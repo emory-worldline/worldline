@@ -1,11 +1,11 @@
 import React from "react";
 import { Text, View, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link } from "expo-router";
+import { Link, Href } from "expo-router";
 
 type GradientButtonProps = {
   text: string;
-  href: string;
+  href: Href<string | object>;
   style: {
     buttonLink?: object;
     buttonGradient?: object;
