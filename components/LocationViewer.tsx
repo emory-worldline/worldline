@@ -90,9 +90,25 @@ const LocationViewer: React.FC = () => {
   }, []);
 
   return (
-    <View style={{ flex: 1 }}>
-      <MapboxGL.MapView style={{ flex: 1 }}>
-        <MapboxGL.Camera zoomLevel={4} centerCoordinate={center} />
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#000",
+      }}
+    >
+      <MapboxGL.MapView
+        style={{ width: `100%`, height: `100%` }}
+        projection="globe"
+      >
+        <MapboxGL.Camera
+          zoomLevel={1}
+          centerCoordinate={center}
+          pitch={0}
+          animationMode="moveTo"
+          animationDuration={0}
+        />
 
         <MapboxGL.ShapeSource id="photoLocations" shape={geoJSON}>
           <MapboxGL.CircleLayer
