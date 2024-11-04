@@ -1,7 +1,8 @@
-import {View, StyleSheet} from "react-native";
-import MapBoxGL from '@rnmapbox/maps'
+import { View, StyleSheet } from "react-native";
+import MapBoxGL from "@rnmapbox/maps";
+import Constants from "expo-constants";
 
-MapBoxGL.setAccessToken(process.env.MAPBOX_PUBLIC_KEY!);
+MapBoxGL.setAccessToken(Constants.expoConfig?.extra?.mapboxPublicKey || "");
 
 const MapComponent = () => {
   return (
@@ -9,22 +10,22 @@ const MapComponent = () => {
       <MapBoxGL.MapView
         style={styles.map}
         zoomEnabled={true}
-        styleURL='mapbox://styles/mapbox/navigation-night-v1'
+        styleURL="mapbox://styles/mapbox/navigation-night-v1"
         rotateEnabled={true}
       >
         <MapBoxGL.Camera
           zoomLevel={15}
-          centerCoordinate={[-84.32318, 33.79080]}
+          centerCoordinate={[-84.32318, 33.7908]}
           pitch={5}
-          animationMode={'flyTo'}
+          animationMode={"flyTo"}
           animationDuration={3000}
         />
         <MapBoxGL.PointAnnotation
           id="marker"
-          coordinate={[-84.3231833, 33.79080]}
+          coordinate={[-84.3231833, 33.7908]}
         >
-          <View style = {styles.marker}/>
-      </MapBoxGL.PointAnnotation>
+          <View style={styles.marker} />
+        </MapBoxGL.PointAnnotation>
       </MapBoxGL.MapView>
     </View>
   );
@@ -35,13 +36,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   map: {
-    flex:1
+    flex: 1,
   },
   marker: {
     width: 10,
     height: 10,
-    backgroundColor: 'red',
-    borderRadius: 5
+    backgroundColor: "red",
+    borderRadius: 5,
   },
 });
 

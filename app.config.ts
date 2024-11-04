@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import "dotenv/config";
 
 export default {
   expo: {
@@ -54,6 +54,9 @@ export default {
     ],
     experiments: {
       typedRoutes: true,
+    },
+    extra: {
+      mapboxPublicKey: process.env.EXPO_PUBLIC_MAPBOX_PUBLIC_KEY,
     },
   },
 };
