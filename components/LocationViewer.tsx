@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Switch, ScrollView, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  Switch,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 import MapboxGL from "@rnmapbox/maps";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
@@ -30,7 +37,7 @@ interface LayerVisibility {
   heatmap: boolean;
   clusters: boolean;
   timeline: boolean;
-  buildings: boolean; // Added buildings toggle
+  buildings: boolean;
 }
 
 const STORAGE_KEYS = {
@@ -52,6 +59,7 @@ const LocationViewer: React.FC = () => {
     timeline: false,
     buildings: true, // Default buildings to visible
   });
+  const [isControlsVisible, setIsControlsVisible] = useState(true);
 
   // Load locations from storage
   useEffect(() => {
@@ -139,7 +147,7 @@ const LocationViewer: React.FC = () => {
           <MapboxGL.FillExtrusionLayer
             id="building-extrusions"
             sourceLayerID="building"
-            minZoomLevel={12}
+            minZoomLevel={10}
             maxZoomLevel={24}
             style={{
               fillExtrusionColor: "#aaa",
@@ -147,18 +155,18 @@ const LocationViewer: React.FC = () => {
                 "interpolate",
                 ["linear"],
                 ["zoom"],
-                12,
+                10,
                 0,
-                12.05,
+                10.05,
                 ["get", "height"],
               ],
               fillExtrusionBase: [
                 "interpolate",
                 ["linear"],
                 ["zoom"],
-                12,
+                10,
                 0,
-                12.05,
+                10.05,
                 ["get", "min_height"],
               ],
               fillExtrusionOpacity: 0.6,
@@ -291,27 +299,39 @@ const LocationViewer: React.FC = () => {
         )}
       </MapboxGL.MapView>
 
-      {/* Controls Panel */}
-      <View style={styles.controlPanel}>
-        <Text style={styles.title}>
-          Photo Locations: {geoJSON.features.length}
+      {/* Simple Toggle Button */}
+      <TouchableOpacity
+        style={styles.toggleButton}
+        onPress={() => setIsControlsVisible(!isControlsVisible)}
+      >
+        <Text style={styles.toggleButtonText}>
+          {isControlsVisible ? "Hide" : "Show"}
         </Text>
-        <ScrollView>
-          {Object.entries(layerVisibility).map(([layer, isVisible]) => (
-            <View key={layer} style={styles.toggleRow}>
-              <Text style={styles.toggleText}>
-                {layer.charAt(0).toUpperCase() + layer.slice(1)}
-              </Text>
-              <Switch
-                value={isVisible}
-                onValueChange={() =>
-                  toggleLayer(layer as keyof LayerVisibility)
-                }
-              />
-            </View>
-          ))}
-        </ScrollView>
-      </View>
+      </TouchableOpacity>
+
+      {/* Control Panel */}
+      {isControlsVisible && (
+        <View style={styles.controlPanel}>
+          <Text style={styles.title}>
+            Photo Locations: {geoJSON.features.length}
+          </Text>
+          <ScrollView>
+            {Object.entries(layerVisibility).map(([layer, isVisible]) => (
+              <View key={layer} style={styles.toggleRow}>
+                <Text style={styles.toggleText}>
+                  {layer.charAt(0).toUpperCase() + layer.slice(1)}
+                </Text>
+                <Switch
+                  value={isVisible}
+                  onValueChange={() =>
+                    toggleLayer(layer as keyof LayerVisibility)
+                  }
+                />
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      )}
     </View>
   );
 };
@@ -326,12 +346,25 @@ const styles = StyleSheet.create({
   },
   controlPanel: {
     position: "absolute",
-    top: 10,
-    left: 10,
+    top: 60,
+    right: 10,
     backgroundColor: "rgba(255,255,255,0.9)",
     padding: 10,
     borderRadius: 5,
     maxHeight: 300,
+    width: 200,
+  },
+  toggleButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    padding: 10,
+    borderRadius: 5,
+    zIndex: 1,
+  },
+  toggleButtonText: {
+    fontWeight: "bold",
   },
   title: {
     fontSize: 16,
