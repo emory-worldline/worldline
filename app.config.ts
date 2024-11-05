@@ -5,7 +5,7 @@ export default {
     name: "worldline",
     slug: "worldline",
     version: "1.0.0",
-    orientation: "portrait",
+    orientation: "default",
     icon: "./assets/images/worldline_logo.png",
     scheme: "myapp",
     userInterfaceStyle: "automatic",

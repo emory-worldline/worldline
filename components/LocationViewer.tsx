@@ -133,7 +133,13 @@ const LocationViewer: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <MapboxGL.MapView style={styles.map} projection="globe">
+      <MapboxGL.MapView
+        style={styles.map}
+        projection="globe"
+        rotateEnabled={true}
+        pitchEnabled={true}
+        compassEnabled={true}
+      >
         <MapboxGL.Camera
           zoomLevel={1}
           centerCoordinate={center}
@@ -357,7 +363,7 @@ const styles = StyleSheet.create({
   toggleButton: {
     position: "absolute",
     top: 10,
-    right: 10,
+    right: 60,
     backgroundColor: "rgba(255,255,255,0.9)",
     padding: 10,
     borderRadius: 5,
