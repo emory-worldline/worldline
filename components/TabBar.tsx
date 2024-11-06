@@ -4,14 +4,14 @@ import Entypo from "@expo/vector-icons/Entypo";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
-type RouteName = "social" | "index" | "settings";
-
 export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const icon = {
-    social: (props: any) => <FontAwesome5 name="users" size={24} {...props} />,
-    index: (props: any) => <Entypo name="globe" size={24} {...props} />,
-    settings: (props: any) => <FontAwesome name="gear" size={24} {...props} />,
+    social: (props: any) => <FontAwesome5 name="users" size={30} {...props} />,
+    index: (props: any) => <Entypo name="globe" size={30} {...props} />,
+    settings: (props: any) => <FontAwesome name="gear" size={30} {...props} />,
   };
+
+  type RouteName = keyof typeof icon;
 
   return (
     <View style={styles.tabBar}>
@@ -60,9 +60,9 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             {icon[route.name as RouteName]({
               color: isFocused ? "#3FBCF4" : "#91A0B1",
             })}
-            <Text style={{ color: isFocused ? "#3FBCF4" : "#91A0B1" }}>
+            {/* <Text style={{ color: isFocused ? "#3FBCF4" : "#91A0B1" }}>
               {options.title}
-            </Text>
+            </Text> */}
           </TouchableOpacity>
         );
       })}
@@ -73,7 +73,7 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 const styles = StyleSheet.create({
   tabBar: {
     position: "absolute",
-    bottom: 50,
+    bottom: 40,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
