@@ -8,15 +8,9 @@ type RouteName = "social" | "index" | "settings";
 
 export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const icon = {
-    social: (props: any) => (
-      <FontAwesome5 name="users" size={24} color={"#222"} />
-    ),
-    index: (props: any) => (
-      <Entypo name="globe" size={24} color={"#222"} {...props} />
-    ),
-    settings: (props: any) => (
-      <FontAwesome name="gear" size={24} color={"#222"} />
-    ),
+    social: (props: any) => <FontAwesome5 name="users" size={24} {...props} />,
+    index: (props: any) => <Entypo name="globe" size={24} {...props} />,
+    settings: (props: any) => <FontAwesome name="gear" size={24} {...props} />,
   };
 
   return (
@@ -64,9 +58,9 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             style={styles.tabBarIcon}
           >
             {icon[route.name as RouteName]({
-              color: isFocused ? "#673ab7" : "#222",
+              color: isFocused ? "#3FBCF4" : "#91A0B1",
             })}
-            <Text style={{ color: isFocused ? "#673ab7" : "#222" }}>
+            <Text style={{ color: isFocused ? "#3FBCF4" : "#91A0B1" }}>
               {options.title}
             </Text>
           </TouchableOpacity>
@@ -83,8 +77,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "white",
-    marginHorizontal: 80,
+    backgroundColor: "#3E4B5A",
+    marginHorizontal: 40,
     paddingVertical: 15,
     borderRadius: 35,
     shadowColor: "#000",
