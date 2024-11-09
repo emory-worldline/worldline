@@ -1,9 +1,15 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { View, Text, Button, ScrollView, Alert } from "react-native";
 import * as MediaLibrary from "expo-media-library";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const STORAGE_KEYS = {
+  mediaStats: "mediaStats",
+  photoLocations: "photoLocations",
+} as const;
 
 const BATCH_SIZE = 10;
-const MAX_MEDIA = 300;
+const MAX_MEDIA = 1000;
 
 interface MediaStats {
   localPhotos: number;
@@ -42,6 +48,13 @@ const initialMediaStats: MediaStats = {
   totalVideoDuration: 0,
   longestVideo: 0,
 };
+
+interface PhotoLocation {
+  id: string;
+  latitude: number | null;
+  longitude: number | null;
+  timestamp: number;
+}
 
 type ExifInfo = {
   [key: string]: any;
@@ -89,6 +102,21 @@ const LibraryAnalyzer: React.FC = () => {
   const [stats, setStats] = useState<MediaStats | null>(null);
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const loadStoredStats = async () => {
+      try {
+        const storedStats = await AsyncStorage.getItem(STORAGE_KEYS.mediaStats);
+        if (storedStats) {
+          setStats(JSON.parse(storedStats));
+        }
+      } catch (error) {
+        console.error("Error loading stored stats:", error);
+      }
+    };
+
+    loadStoredStats();
+  }, []);
 
   const processAsset = async (
     asset: MediaLibrary.Asset,
@@ -172,6 +200,16 @@ const LibraryAnalyzer: React.FC = () => {
           mediaStats.fastest = Math.max(mediaStats.fastest, speed);
         }
       }
+
+      // location
+      if (assetInfo.location) {
+        return {
+          id: asset.id,
+          latitude: Number(assetInfo.location.latitude),
+          longitude: Number(assetInfo.location.longitude),
+          timestamp: asset.creationTime,
+        } as PhotoLocation;
+      }
     } catch (assetError) {
       console.error("Error processing asset:", assetError);
     }
@@ -189,6 +227,7 @@ const LibraryAnalyzer: React.FC = () => {
       }
 
       let mediaStats: MediaStats = { ...initialMediaStats };
+      let locationData: PhotoLocation[] = [];
       let hasNextPage = true;
       let endCursor: string | undefined;
 
@@ -215,7 +254,10 @@ const LibraryAnalyzer: React.FC = () => {
         });
 
         await Promise.all(
-          assets.map((asset) => processAsset(asset, mediaStats)),
+          assets.map(async (asset) => {
+            const result = await processAsset(asset, mediaStats);
+            if (result) locationData.push(result);
+          }),
         );
 
         setStats({ ...mediaStats });
@@ -228,6 +270,20 @@ const LibraryAnalyzer: React.FC = () => {
 
         hasNextPage = newHasNextPage;
         endCursor = newEndCursor;
+      }
+
+      try {
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.mediaStats,
+          JSON.stringify(mediaStats),
+        );
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.photoLocations,
+          JSON.stringify(locationData),
+        );
+        console.log(`Saved ${locationData.length} photo locations`);
+      } catch (storageError) {
+        console.error("Error saving to storage:", storageError);
       }
 
       if (
@@ -257,6 +313,9 @@ const LibraryAnalyzer: React.FC = () => {
     <ScrollView style={{ flex: 1, padding: 20 }}>
       {!processing && !stats && (
         <Button title="Analyze Media Library" onPress={analyzeMediaLibrary} />
+      )}
+      {!processing && stats && (
+        <Button title="Reprocess Media Library" onPress={analyzeMediaLibrary} />
       )}
       {processing && <Text>Processing... {progress} items analyzed</Text>}
       {stats && (
