@@ -59,7 +59,7 @@ const LocationViewer: React.FC = () => {
     timeline: false,
     buildings: true, // Default buildings to visible
   });
-  const [isControlsVisible, setIsControlsVisible] = useState(true);
+  const [isControlsVisible, setIsControlsVisible] = useState(false);
 
   // Load locations from storage
   useEffect(() => {
@@ -352,8 +352,8 @@ const styles = StyleSheet.create({
   },
   controlPanel: {
     position: "absolute",
-    top: 60,
-    right: 10,
+    top: 150,
+    left: 10,
     backgroundColor: "rgba(255,255,255,0.9)",
     padding: 10,
     borderRadius: 5,
@@ -362,8 +362,8 @@ const styles = StyleSheet.create({
   },
   toggleButton: {
     position: "absolute",
-    top: 10,
-    right: 60,
+    top: 100,
+    left: 10,
     backgroundColor: "rgba(255,255,255,0.9)",
     padding: 10,
     borderRadius: 5,
