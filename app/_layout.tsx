@@ -12,21 +12,15 @@ export default function RootLayout() {
           headerBackTitle: "Home",
           headerTitle: "Setup",
           headerRight: () => (
-            <Link href="/test" asChild>
+            <Link href="/(tabs)" asChild>
               <Pressable style={{ marginRight: 10 }}>
-                <Text style={{ color: "#007AFF" }}>Map</Text>
+                <Text style={{ color: "#007AFF" }}>Continue</Text>
               </Pressable>
             </Link>
           ),
         }}
       />
-      <Stack.Screen
-        name="test"
-        options={{
-          headerTitle: "Map",
-          headerBackTitle: "Setup",
-        }}
-      />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     </Stack>
   );
 }
