@@ -16,14 +16,14 @@ export default {
     },
     ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.anonymous.worldline",
+      bundleIdentifier: process.env.IDENTIFIER,
     },
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
         backgroundColor: "#ffffff",
       },
-      package: "com.anonymous.worldline",
+      package: process.env.IDENTIFIER,
     },
     web: {
       bundler: "metro",
@@ -41,7 +41,7 @@ export default {
             buildToolsVersion: "34.0.0",
           },
           ios: {
-            deploymentTarget: "18.0",
+            deploymentTarget: process.env.IOS,
           },
         },
       ],
