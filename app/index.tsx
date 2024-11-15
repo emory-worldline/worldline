@@ -15,32 +15,9 @@ export default function Index() {
 
       <GradientText text="worldline" style={styles} />
 
-      <GradientButton text="Get Started" href="/setup" style={styles} />
+      <GradientButton text="Get Started" href="/(tabs)" style={styles} />
 
       <PrivacyPolicyButton />
     </View>
   );
 }
-
-const test = StyleSheet.create({
-  container: {
-    justifyContent: "center",
-    alignItems: "center",
-    flex: 1,
-    backgroundColor: "#212121",
-  },
-  title: {
-    fontWeight: "bold",
-    fontSize: 64,
-    lineHeight: 96,
-    textAlign: "center",
-    justifyContent: "center",
-    marginTop: 200,
-  },
-  globe: {
-    position: "absolute",
-    top: -100,
-    width: 500,
-    height: 620,
-  },
-});

@@ -1,12 +1,12 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import Entypo from "@expo/vector-icons/Entypo";
-import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const icon = {
-    social: (props: any) => <FontAwesome5 name="users" size={30} {...props} />,
+    stats: (props: any) => <Ionicons name="stats-chart" size={30} {...props} />,
     index: (props: any) => <Entypo name="globe" size={30} {...props} />,
     settings: (props: any) => <FontAwesome name="gear" size={30} {...props} />,
   };
