@@ -6,7 +6,8 @@ export default function RootLayout() {
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
-      {/* <Stack.Screen
+      <Stack.Screen name="privacy_policy" options={{ headerShown: false }} />
+      <Stack.Screen
         name="setup"
         options={{
           headerBackTitle: "Home",
@@ -19,7 +20,7 @@ export default function RootLayout() {
             </Link>
           ),
         }}
-      /> */}
+      />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     </Stack>
   );

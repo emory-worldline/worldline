@@ -1,11 +1,12 @@
 import React from "react";
 import { Text, Pressable, StyleSheet } from "react-native";
+import { Link } from "expo-router";
 
 export default function PrivacyPolicyButton() {
   return (
-    <Pressable style={styles.buttonContainer}>
+    <Link href={"/privacy_policy"} style={styles.buttonContainer}>
       <Text style={styles.buttonText}>Privacy Policy</Text>
-    </Pressable>
+    </Link>
   );
 }
 
