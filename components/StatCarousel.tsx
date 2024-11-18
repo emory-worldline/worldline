@@ -21,16 +21,66 @@ interface StatConfig {
   key: keyof MediaStats;
   title: string;
   emoji: string;
+  formatValue: (value: number) => string;
 }
 
+const formatTime = (seconds: number): string => {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  } else if (minutes > 0) {
+    return `${minutes}m ${remainingSeconds}s`;
+  } else {
+    return `${remainingSeconds}s`;
+  }
+};
+
 const STAT_CONFIGS: StatConfig[] = [
-  { key: "highest", title: "Highest Photo", emoji: "🏔️" },
-  { key: "lowest", title: "Lowest Photo", emoji: "↓" },
-  { key: "fastest", title: "Fastest Photo", emoji: "⚡️" },
-  { key: "localPhotos", title: "Local Photos", emoji: "📷" },
-  { key: "localVideos", title: "Local Videos", emoji: "🎥" },
-  { key: "longestVideo", title: "Longest Video", emoji: "📼" },
-  { key: "totalVideoDuration", title: "Total Video Duration", emoji: "📀" },
+  {
+    key: "highest",
+    title: "Highest Photo",
+    emoji: "🏔️",
+    formatValue: (value) => `${value.toFixed(0)}m`,
+  },
+  {
+    key: "lowest",
+    title: "Lowest Photo",
+    emoji: "↓",
+    formatValue: (value) => `${value.toFixed(0)}m`,
+  },
+  {
+    key: "fastest",
+    title: "Fastest Photo",
+    emoji: "⚡️",
+    formatValue: (value) => `${value.toFixed(1)}km/h`,
+  },
+  {
+    key: "localPhotos",
+    title: "Local Photos",
+    emoji: "📷",
+    formatValue: (value) => value.toString(),
+  },
+  {
+    key: "localVideos",
+    title: "Local Videos",
+    emoji: "🎥",
+    formatValue: (value) => value.toString(),
+  },
+  {
+    key: "longestVideo",
+    title: "Longest Video",
+    emoji: "📼",
+    formatValue: formatTime,
+  },
+  {
+    key: "totalVideoDuration",
+    title: "Total Video Duration",
+    emoji: "📀",
+    formatValue: formatTime,
+  },
 ];
 
 interface StatsCarouselProps {
@@ -53,7 +103,7 @@ function StatsCarousel({ stats }: StatsCarouselProps) {
       <View style={styles.itemContainer}>
         <StatHighlight
           title={statConfig.title}
-          value={stats[statConfig.key]}
+          value={statConfig.formatValue(stats[statConfig.key])}
           icon={statConfig.emoji}
         />
       </View>

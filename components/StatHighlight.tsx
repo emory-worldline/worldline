@@ -6,7 +6,7 @@ const StatHighlight = ({
   icon,
 }: {
   title: string;
-  value: number;
+  value: string;
   icon: string;
 }) => {
   return (
@@ -14,7 +14,7 @@ const StatHighlight = ({
       <Text style={styles.title}>{title}</Text>
       <Text>{icon}</Text>
       <Text style={styles.value} numberOfLines={1}>
-        {value.toString()}
+        {value}
       </Text>
     </View>
   );
