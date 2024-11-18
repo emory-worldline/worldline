@@ -20,7 +20,7 @@ import { useMediaProcessing } from "@/hooks/useMediaProcessing";
 import StatGraph from "@/components/StatGraph";
 import StatPieChart from "@/components/StatPieChart";
 import GradientButton from "@/components/GradientButton";
-import { styles } from "../styles/IndexStyles";
+import GradientText from "@/components/GradientText";
 
 export default function StatsScreen() {
   const [stats, setStats] = useState<MediaStats>(initialMediaStats);
@@ -57,10 +57,28 @@ export default function StatsScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#212121" }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        <View style={{ margin: 12, marginBottom: 24, overflow: "hidden" }}>
-          <View style={{}}>
-            <StatGraph yearStats={stats.creationYears} />
-          </View>
+        <GradientText
+          text={"Statistics"}
+          style={{
+            textGradient: {
+              fontWeight: "bold",
+              fontSize: 64,
+              textAlign: "center",
+              justifyContent: "center",
+              padding: 8,
+            },
+          }}
+        />
+        <View
+          style={{
+            margin: 12,
+            marginBottom: 20,
+            backgroundColor: "#111111",
+            padding: 8,
+            borderRadius: 8,
+          }}
+        >
+          <StatGraph yearStats={stats.creationYears} />
         </View>
         <StatsCarousel stats={stats} />
         <View
@@ -72,7 +90,7 @@ export default function StatsScreen() {
             margin: 12,
             borderRadius: 8,
             backgroundColor: "#111111",
-            marginTop: 24,
+            marginVertical: 20,
           }}
         >
           <StatPieChart data={stats.cameraModels} title="Camera Model" />
@@ -85,12 +103,13 @@ export default function StatsScreen() {
             flexDirection: "row",
             padding: 12,
             margin: 12,
-            marginBottom: 24,
+            marginTop: 0,
+            marginBottom: 20,
             borderRadius: 8,
             backgroundColor: "#111111",
           }}
         >
-          <StatPieChart data={stats.orientations} title="Orientation" />
+          <StatPieChart data={stats.fileTypes} title="File Type" />
           <StatPieChart data={stats.timeOfDay} title="Time Of Day" />
         </View>
         <View style={{ alignItems: "center" }}>
@@ -112,7 +131,7 @@ export default function StatsScreen() {
 
 const buttonStyle = StyleSheet.create({
   buttonGradient: {
-    width: 240,
+    width: 325,
     height: 75,
     borderRadius: 22.5,
   },
@@ -120,11 +139,10 @@ const buttonStyle = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 26,
     fontWeight: "bold",
-    lineHeight: 80,
   },
   buttonContainer: {
     flex: 1,
-    width: 240,
+    width: 325,
     height: 75,
     alignItems: "center",
     justifyContent: "center",

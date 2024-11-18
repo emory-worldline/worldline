@@ -66,7 +66,7 @@ const STAT_CONFIGS: StatConfig[] = [
   {
     key: "localVideos",
     title: "Local Videos",
-    emoji: "🎥",
+    emoji: "📹",
     formatValue: (value) => value.toString(),
   },
   {
@@ -77,8 +77,8 @@ const STAT_CONFIGS: StatConfig[] = [
   },
   {
     key: "totalVideoDuration",
-    title: "Total Video Duration",
-    emoji: "📀",
+    title: "Recording Time",
+    emoji: "🎥",
     formatValue: formatTime,
   },
 ];

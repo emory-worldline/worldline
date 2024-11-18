@@ -12,7 +12,7 @@ const StatHighlight = ({
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
-      <Text>{icon}</Text>
+      <Text style={{ fontSize: 30, padding: 8 }}>{icon}</Text>
       <Text style={styles.value} numberOfLines={1}>
         {value}
       </Text>
@@ -35,16 +35,13 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   title: {
-    fontSize: 16,
-    padding: 4,
+    fontSize: 14,
     fontWeight: "bold",
     color: "#FFF",
-    marginBottom: 4,
     textAlign: "center",
   },
   value: {
     fontSize: 20,
-    padding: 4,
     fontWeight: "600",
     color: "rgba(53,203,169,1)",
   },
