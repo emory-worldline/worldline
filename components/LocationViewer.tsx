@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  Animated,
 } from "react-native";
 import MapboxGL from "@rnmapbox/maps";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -60,7 +61,19 @@ const LocationViewer: React.FC = () => {
     timeline: false,
     buildings: true, // Default buildings to visible
   });
+
   const [isControlsVisible, setIsControlsVisible] = useState(false);
+  const animation = useRef(new Animated.Value(70)).current; // for collapsed controls bar
+
+  const toggleControls = () => {
+    // animate height of control bar
+    setIsControlsVisible((prev) => !prev);
+    Animated.timing(animation, {
+      toValue: isControlsVisible ? 70 : 300,    // target height (collapsed: first value, expanded: second value)
+      duration: 300,                            // animation duration in ms
+      useNativeDriver: false
+    }).start();
+  };
 
   // Load locations from storage
   useEffect(() => {
@@ -306,25 +319,22 @@ const LocationViewer: React.FC = () => {
         )}
       </MapboxGL.MapView>
       
-      <View
-        style={[
-          styles.controlsBar,
-          isControlsVisible ? styles.controlsBarExpanded : styles.controlsBarCollapsed,
-        ]}
-      >
+      {/* Controls Bar */}
+      <Animated.View style={[styles.controlsBar, { height: animation }]}>
+        
         {/* Toggle Button */}
         <TouchableOpacity
           style={styles.controlsToggle}
-          onPress={() => setIsControlsVisible(!isControlsVisible)}
+          onPress={toggleControls}
         >
           <MaterialIcons
             name={isControlsVisible ? "keyboard-arrow-up" : "layers"}
-            size={24}
+            size={30}
             color="#FFF"
           />
         </TouchableOpacity>
 
-        {/* Expanded Controls Bar */}
+        {/* Expanded Control Bar Buttons */}
         {isControlsVisible &&
           Object.entries(layerVisibility).map(([layer, isVisible]) => (
             <TouchableOpacity
@@ -362,7 +372,7 @@ const LocationViewer: React.FC = () => {
               )}
             </TouchableOpacity>
           ))}
-      </View>
+      </Animated.View>
     </View>
   );
 };
@@ -377,35 +387,37 @@ const styles = StyleSheet.create({
   },
   controlsBar: {
     position: "absolute",
-    right: 20,
+    right: 25, // Adjust this value to move the bar away from the screen edge
+    top: 140, // Position below the compass icon (adjust as needed)
+    width: 70,
     backgroundColor: "rgba(62, 75, 90, 1.0)",
     borderRadius: 40,
     zIndex: 2,
     alignItems: "center",
-    overflow: "hidden",
+    overflow: "hidden", // Prevent content from spilling out
+    paddingVertical: 10
   },
   controlsBarCollapsed: {
-    top: 120,
-    height: 70,
     width: 70,
-    justifyContent: "center",
+    height: 70,
+    justifyContent: "center", // Center content vertically
+    paddingVertical: 5,
   },
   controlsBarExpanded: {
-    top: 120,
-    paddingVertical: 10,
     width: 70,
-    height: "auto",
+    height: "auto", // Let it grow dynamically when expanded
+    paddingVertical: 10,
   },
   controlsToggle: {
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: "center", // Center horizontally
+    justifyContent: "center", // Center vertically
     width: "100%",
     paddingVertical: 10,
   },
   controlsButton: {
-    marginVertical: 8,
+    marginVertical: 6, // Reduce spacing between icons
     alignItems: "center",
-    paddingVertical: 8,
+    paddingVertical: 7,
     borderRadius: 10,
     width: "100%",
     backgroundColor: "transparent",
