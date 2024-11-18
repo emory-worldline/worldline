@@ -305,39 +305,33 @@ const LocationViewer: React.FC = () => {
         )}
       </MapboxGL.MapView>
 
-      {/* Simple Toggle Button */}
+      {/* Toggle Controls Button */}
       <TouchableOpacity
-        style={styles.toggleButton}
+        style={styles.toggleControlsBarButton}
         onPress={() => setIsControlsVisible(!isControlsVisible)}
       >
-        <Text style={styles.toggleButtonText}>
+        <Text style={styles.toggleControlsBarText}>
           {isControlsVisible ? "Hide" : "Show"}
         </Text>
       </TouchableOpacity>
 
-      {/* Control Panel */}
+      {/* Vertical Control Bar */}
       {isControlsVisible && (
-        <View style={styles.controlPanel}>
-          <Text style={styles.title}>
-            Photo Locations: {geoJSON.features.length}
-          </Text>
-          <ScrollView>
-            {Object.entries(layerVisibility).map(([layer, isVisible]) => (
-              <View key={layer} style={styles.toggleRow}>
-                <Text style={styles.toggleText}>
-                  {layer.charAt(0).toUpperCase() + layer.slice(1)}
-                </Text>
-                <Switch
-                  value={isVisible}
-                  onValueChange={() =>
-                    toggleLayer(layer as keyof LayerVisibility)
-                  }
-                />
-              </View>
-            ))}
-          </ScrollView>
+        <View style={styles.controlsBar}>
+          {Object.entries(layerVisibility).map(([layer, isVisible]) => (
+            <TouchableOpacity
+              key={layer}
+              style={styles.controlsButton}
+              onPress={() => toggleLayer(layer as keyof LayerVisibility)}
+            >
+              <Text style={styles.controlsButtonText}>
+                {isVisible ? `${layer.charAt(0).toUpperCase() + layer.slice(1)} ✓` : layer.charAt(0).toUpperCase() + layer.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
       )}
+
     </View>
   );
 };
@@ -350,41 +344,44 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
   },
-  controlPanel: {
-    position: "absolute",
-    top: 150,
-    left: 10,
-    backgroundColor: "rgba(255,255,255,0.9)",
-    padding: 10,
-    borderRadius: 5,
-    maxHeight: 300,
-    width: 200,
-  },
-  toggleButton: {
+  controlsBar: {
     position: "absolute",
     top: 100,
-    left: 10,
-    backgroundColor: "rgba(255,255,255,0.9)",
-    padding: 10,
-    borderRadius: 5,
-    zIndex: 1,
-  },
-  toggleButtonText: {
-    fontWeight: "bold",
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  toggleRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    right: 10,
+    backgroundColor: "rgba(60, 60, 67, 1)",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 15,
+    width: 80, 
+    zIndex: 2,
     alignItems: "center",
-    marginVertical: 5,
   },
-  toggleText: {
-    marginRight: 10,
+  controlsButton: {
+    marginVertical: 8,
+    alignItems: "center",
+    paddingVertical: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 10,
+    width: "100%",
+  },
+  controlsButtonText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  toggleControlsBarButton: {
+    position: "absolute",
+    top: 50,
+    right: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    padding: 5,
+    borderRadius: 5,
+    zIndex: 3,
+  },
+  toggleControlsBarText: {
+    fontWeight: "bold",
+    fontSize: 12,
   },
 });
 
