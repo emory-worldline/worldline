@@ -19,18 +19,17 @@ function StatGraph({ yearStats }: StatGraphProps) {
     }))
     .sort((a, b) => a.label.localeCompare(b.label));
 
-  const window = Dimensions.get("window");
-  const PAGE_WIDTH = window.width;
-
   return (
     <LineChart
       areaChart
       curved
       adjustToWidth
       data={chartData}
-      spacing={150}
+      spacing={100}
       hideYAxisText
       hideRules
+      textShiftY={-10}
+      textColor="white"
       noOfSections={3}
       yAxisColor="rgba(53,203,169,1)"
       showVerticalLines

@@ -78,8 +78,8 @@ const StatPieChart = ({ data, title = "Distribution" }: StatPieChartProps) => {
           showGradient
           sectionAutoFocus
           focusOnPress
-          radius={85}
-          innerRadius={55}
+          radius={75}
+          innerRadius={45}
           innerCircleColor={"#232B5D"}
           centerLabelComponent={() => {
             return (
@@ -89,7 +89,7 @@ const StatPieChart = ({ data, title = "Distribution" }: StatPieChartProps) => {
                 >
                   {pieData[focusedIndex].value}%
                 </Text>
-                <Text style={{ fontSize: 12, color: "white" }}>
+                <Text style={{ fontSize: 11, color: "white" }}>
                   {processedEntries[focusedIndex][0]}
                 </Text>
               </View>
