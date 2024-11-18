@@ -1,4 +1,3 @@
-import { PieChart } from "react-native-gifted-charts";
 import {
   View,
   StyleSheet,
@@ -18,6 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import StatsCarousel from "@/components/StatCarousel";
 import LibraryAnalyzer from "@/components/LibraryStats";
 import StatGraph from "@/components/StatGraph";
+import StatPieChart from "@/components/StatPieChart";
 
 export default function StatsScreen() {
   const [stats, setStats] = useState<MediaStats>(initialMediaStats);
@@ -42,9 +42,11 @@ export default function StatsScreen() {
 
   return (
     <SafeAreaView style={{ backgroundColor: "#212121" }}>
-      <ScrollView style={styles.container}>
-        <View style={{ margin: 20, overflow: "hidden" }}>
-          <StatGraph yearStats={stats.creationYears} />
+      <ScrollView>
+        <View style={{ margin: 12 }}>
+          <View style={{ overflow: "hidden" }}>
+            <StatGraph yearStats={stats.creationYears} />
+          </View>
         </View>
         <StatsCarousel stats={stats} />
         <View
@@ -52,26 +54,17 @@ export default function StatsScreen() {
             justifyContent: "center",
             flex: 1,
             flexDirection: "row",
-            gap: 10,
+            padding: 12,
+            margin: 12,
+            borderRadius: 8,
+            backgroundColor: "#111111",
           }}
         >
-          <PieChart
-            data={[{ value: 15 }, { value: 30 }, { value: 26 }, { value: 40 }]}
-            radius={100}
-          />
-          <PieChart
-            data={[{ value: 15 }, { value: 30 }, { value: 26 }, { value: 40 }]}
-            radius={100}
-          />
+          <StatPieChart data={stats.cameraModels} title="Camera Model" />
+          <StatPieChart data={stats.aspectRatios} title="Aspect Ratio" />
         </View>
         <LibraryAnalyzer />
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#212121",
-  },
-});

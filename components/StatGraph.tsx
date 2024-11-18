@@ -41,7 +41,11 @@ function StatGraph({ yearStats }: StatGraphProps) {
       lineGradientEndColor="rgba(109,53,183,1)"
       dataPointsColor="white"
       thickness={5}
-      xAxisLabelTextStyle={{ color: "rgba(53,203,169,1)", textAlign: "center" }}
+      xAxisLabelTextStyle={{
+        color: "rgba(53,203,169,1)",
+        textAlign: "center",
+        fontWeight: "bold",
+      }}
       yAxisTextStyle={{ color: "rgba(53,203,169,1)", textAlign: "center" }}
       startFillColor="rgba(53,203,169,1)"
       endFillColor="rgba(109,53,183,1)"
