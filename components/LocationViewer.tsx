@@ -10,6 +10,7 @@ import {
 import MapboxGL from "@rnmapbox/maps";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
+import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 
 MapboxGL.setAccessToken(Constants.expoConfig?.extra?.mapboxPublicKey || "");
 
@@ -324,9 +325,34 @@ const LocationViewer: React.FC = () => {
               style={styles.controlsButton}
               onPress={() => toggleLayer(layer as keyof LayerVisibility)}
             >
-              <Text style={styles.controlsButtonText}>
-                {isVisible ? `${layer.charAt(0).toUpperCase() + layer.slice(1)} ✓` : layer.charAt(0).toUpperCase() + layer.slice(1)}
-              </Text>
+              {layer === "points" && (
+                <FontAwesome
+                  name="map-pin"
+                  size={30}
+                  color={isVisible ? "#FFD700" : "#FFF"}
+                />
+              )}
+              {layer === "heatmap" && (
+                <FontAwesome
+                  name="dot-circle-o"
+                  size={30}
+                  color={isVisible ? "#FFD700" : "#FFF"}
+                />
+              )}
+              {layer === "clusters" && (
+                <MaterialIcons
+                  name="group-work"
+                  size={30}
+                  color={isVisible ? "#FFD700" : "#FFF"}
+                />
+              )}
+              {layer === "timeline" && (
+                <FontAwesome
+                  name="clock-o"
+                  size={30}
+                  color={isVisible ? "#FFD700" : "#FFF"}
+                />
+              )}
             </TouchableOpacity>
           ))}
         </View>
@@ -346,29 +372,23 @@ const styles = StyleSheet.create({
   },
   controlsBar: {
     position: "absolute",
-    top: 100,
+    top: 130,
     right: 10,
-    backgroundColor: "rgba(60, 60, 67, 1)",
+    backgroundColor: "rgba(62, 75, 90, 1.0)",
     paddingVertical: 10,
     paddingHorizontal: 15,
-    borderRadius: 15,
-    width: 80, 
+    borderRadius: 40,
+    width: 70, 
     zIndex: 2,
     alignItems: "center",
   },
   controlsButton: {
-    marginVertical: 8,
+    marginVertical: 4,
     alignItems: "center",
-    paddingVertical: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    paddingVertical: 10,
     borderRadius: 10,
     width: "100%",
-  },
-  controlsButtonText: {
-    color: "white",
-    fontSize: 12,
-    fontWeight: "500",
-    textAlign: "center",
+    backgroundColor: "transparent",
   },
   toggleControlsBarButton: {
     position: "absolute",
