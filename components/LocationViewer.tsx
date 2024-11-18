@@ -11,7 +11,7 @@ import {
 import MapboxGL from "@rnmapbox/maps";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
-import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
+import ControlsBar from "./ControlsBar";
 
 MapboxGL.setAccessToken(Constants.expoConfig?.extra?.mapboxPublicKey || "");
 
@@ -34,7 +34,7 @@ interface GeoJSONFeature {
   };
 }
 
-interface LayerVisibility {
+export interface LayerVisibility {
   points: boolean;
   heatmap: boolean;
   clusters: boolean;
@@ -62,11 +62,10 @@ const LocationViewer: React.FC = () => {
     buildings: true, // Default buildings to visible
   });
 
+  // animate controls bar
   const [isControlsVisible, setIsControlsVisible] = useState(false);
-  const animation = useRef(new Animated.Value(70)).current; // for collapsed controls bar
-
+  const animation = useRef(new Animated.Value(70)).current;
   const toggleControls = () => {
-    // animate height of control bar
     setIsControlsVisible((prev) => !prev);
     Animated.timing(animation, {
       toValue: isControlsVisible ? 70 : 300,    // target height (collapsed: first value, expanded: second value)
@@ -320,59 +319,13 @@ const LocationViewer: React.FC = () => {
       </MapboxGL.MapView>
       
       {/* Controls Bar */}
-      <Animated.View style={[styles.controlsBar, { height: animation }]}>
-        
-        {/* Toggle Button */}
-        <TouchableOpacity
-          style={styles.controlsToggle}
-          onPress={toggleControls}
-        >
-          <MaterialIcons
-            name={isControlsVisible ? "keyboard-arrow-up" : "layers"}
-            size={30}
-            color="#FFF"
-          />
-        </TouchableOpacity>
-
-        {/* Expanded Control Bar Buttons */}
-        {isControlsVisible &&
-          Object.entries(layerVisibility).map(([layer, isVisible]) => (
-            <TouchableOpacity
-              key={layer}
-              style={styles.controlsButton}
-              onPress={() => toggleLayer(layer as keyof LayerVisibility)}
-            >
-              {layer === "points" && (
-                <FontAwesome
-                  name="map-pin"
-                  size={30}
-                  color={isVisible ? "#FFD700" : "#FFF"}
-                />
-              )}
-              {layer === "heatmap" && (
-                <FontAwesome
-                  name="dot-circle-o"
-                  size={30}
-                  color={isVisible ? "#FFD700" : "#FFF"}
-                />
-              )}
-              {layer === "clusters" && (
-                <MaterialIcons
-                  name="group-work"
-                  size={30}
-                  color={isVisible ? "#FFD700" : "#FFF"}
-                />
-              )}
-              {layer === "timeline" && (
-                <FontAwesome
-                  name="clock-o"
-                  size={30}
-                  color={isVisible ? "#FFD700" : "#FFF"}
-                />
-              )}
-            </TouchableOpacity>
-          ))}
-      </Animated.View>
+      <ControlsBar
+        layerVisibility={layerVisibility}
+        toggleLayer={toggleLayer}
+        isControlsVisible={isControlsVisible}
+        toggleControls={toggleControls}
+        animation={animation} // Pass animation state
+      />
     </View>
   );
 };
@@ -384,43 +337,6 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
-  },
-  controlsBar: {
-    position: "absolute",
-    right: 25, // Adjust this value to move the bar away from the screen edge
-    top: 140, // Position below the compass icon (adjust as needed)
-    width: 70,
-    backgroundColor: "rgba(62, 75, 90, 1.0)",
-    borderRadius: 40,
-    zIndex: 2,
-    alignItems: "center",
-    overflow: "hidden", // Prevent content from spilling out
-    paddingVertical: 10
-  },
-  controlsBarCollapsed: {
-    width: 70,
-    height: 70,
-    justifyContent: "center", // Center content vertically
-    paddingVertical: 5,
-  },
-  controlsBarExpanded: {
-    width: 70,
-    height: "auto", // Let it grow dynamically when expanded
-    paddingVertical: 10,
-  },
-  controlsToggle: {
-    alignItems: "center", // Center horizontally
-    justifyContent: "center", // Center vertically
-    width: "100%",
-    paddingVertical: 10,
-  },
-  controlsButton: {
-    marginVertical: 6, // Reduce spacing between icons
-    alignItems: "center",
-    paddingVertical: 7,
-    borderRadius: 10,
-    width: "100%",
-    backgroundColor: "transparent",
   },
 });
 
