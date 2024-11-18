@@ -17,6 +17,25 @@ export interface MediaStats {
   longestVideo: number;
 }
 
+export const initialMediaStats: MediaStats = {
+  localPhotos: 0,
+  localVideos: 0,
+  networkPhotos: 0,
+  networkVideos: 0,
+  orientations: {},
+  aspectRatios: {},
+  fileTypes: {},
+  creationYears: {},
+  timeOfDay: {},
+  cameraModels: {},
+  lensModels: {},
+  highest: 0,
+  lowest: Infinity,
+  fastest: 0,
+  totalVideoDuration: 0,
+  longestVideo: 0,
+};
+
 export interface PhotoLocation {
   id: string;
   latitude: number;

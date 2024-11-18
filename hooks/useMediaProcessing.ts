@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   MediaStats,
+  initialMediaStats,
   PhotoLocation,
   ExifInfo,
   ProcessingStatus,
@@ -17,25 +18,6 @@ import {
   getTimeOfDay,
 } from "../utils/mediaUtils";
 import { Alert } from "react-native";
-
-const initialMediaStats: MediaStats = {
-  localPhotos: 0,
-  localVideos: 0,
-  networkPhotos: 0,
-  networkVideos: 0,
-  orientations: {},
-  aspectRatios: {},
-  fileTypes: {},
-  creationYears: {},
-  timeOfDay: {},
-  cameraModels: {},
-  lensModels: {},
-  highest: 0,
-  lowest: Infinity,
-  fastest: 0,
-  totalVideoDuration: 0,
-  longestVideo: 0,
-};
 
 const processAsset = async (
   asset: MediaLibrary.Asset,
