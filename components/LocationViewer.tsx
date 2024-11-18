@@ -305,21 +305,28 @@ const LocationViewer: React.FC = () => {
           </MapboxGL.ShapeSource>
         )}
       </MapboxGL.MapView>
-
-      {/* Toggle Controls Button */}
-      <TouchableOpacity
-        style={styles.toggleControlsBarButton}
-        onPress={() => setIsControlsVisible(!isControlsVisible)}
+      
+      <View
+        style={[
+          styles.controlsBar,
+          isControlsVisible ? styles.controlsBarExpanded : styles.controlsBarCollapsed,
+        ]}
       >
-        <Text style={styles.toggleControlsBarText}>
-          {isControlsVisible ? "Hide" : "Show"}
-        </Text>
-      </TouchableOpacity>
+        {/* Toggle Button */}
+        <TouchableOpacity
+          style={styles.controlsToggle}
+          onPress={() => setIsControlsVisible(!isControlsVisible)}
+        >
+          <MaterialIcons
+            name={isControlsVisible ? "keyboard-arrow-up" : "layers"}
+            size={24}
+            color="#FFF"
+          />
+        </TouchableOpacity>
 
-      {/* Vertical Control Bar */}
-      {isControlsVisible && (
-        <View style={styles.controlsBar}>
-          {Object.entries(layerVisibility).map(([layer, isVisible]) => (
+        {/* Expanded Controls Bar */}
+        {isControlsVisible &&
+          Object.entries(layerVisibility).map(([layer, isVisible]) => (
             <TouchableOpacity
               key={layer}
               style={styles.controlsButton}
@@ -355,9 +362,7 @@ const LocationViewer: React.FC = () => {
               )}
             </TouchableOpacity>
           ))}
-        </View>
-      )}
-
+      </View>
     </View>
   );
 };
@@ -372,36 +377,38 @@ const styles = StyleSheet.create({
   },
   controlsBar: {
     position: "absolute",
-    top: 130,
-    right: 10,
+    right: 20,
     backgroundColor: "rgba(62, 75, 90, 1.0)",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
     borderRadius: 40,
-    width: 70, 
     zIndex: 2,
     alignItems: "center",
+    overflow: "hidden",
+  },
+  controlsBarCollapsed: {
+    top: 120,
+    height: 70,
+    width: 70,
+    justifyContent: "center",
+  },
+  controlsBarExpanded: {
+    top: 120,
+    paddingVertical: 10,
+    width: 70,
+    height: "auto",
+  },
+  controlsToggle: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    paddingVertical: 10,
   },
   controlsButton: {
-    marginVertical: 4,
+    marginVertical: 8,
     alignItems: "center",
-    paddingVertical: 10,
+    paddingVertical: 8,
     borderRadius: 10,
     width: "100%",
     backgroundColor: "transparent",
-  },
-  toggleControlsBarButton: {
-    position: "absolute",
-    top: 50,
-    right: 10,
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
-    padding: 5,
-    borderRadius: 5,
-    zIndex: 3,
-  },
-  toggleControlsBarText: {
-    fontWeight: "bold",
-    fontSize: 12,
   },
 });
 
