@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -6,12 +6,14 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  Animated,
 } from "react-native";
 import MapboxGL from "@rnmapbox/maps";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import { useIsFocused } from "@react-navigation/native";
 import { PhotoLocation, STORAGE_KEYS } from "@/types/mediaTypes";
+import ControlsBar from "./ControlsBar";
 
 MapboxGL.setAccessToken(Constants.expoConfig?.extra?.mapboxPublicKey || "");
 
@@ -27,7 +29,7 @@ interface GeoJSONFeature {
   };
 }
 
-interface LayerVisibility {
+export interface LayerVisibility {
   points: boolean;
   heatmap: boolean;
   clusters: boolean;
@@ -51,7 +53,18 @@ const LocationViewer: React.FC = () => {
     timeline: false,
     buildings: true, // Default buildings to visible
   });
+
+  // animate controls bar
   const [isControlsVisible, setIsControlsVisible] = useState(false);
+  const animation = useRef(new Animated.Value(70)).current;
+  const toggleControls = () => {
+    setIsControlsVisible((prev) => !prev);
+    Animated.timing(animation, {
+      toValue: isControlsVisible ? 70 : 300, // target height (collapsed: first value, expanded: second value)
+      duration: 300, // animation duration in ms
+      useNativeDriver: false,
+    }).start();
+  };
 
   // Load locations from storage
   const loadLocations = async () => {
@@ -300,39 +313,14 @@ const LocationViewer: React.FC = () => {
         )}
       </MapboxGL.MapView>
 
-      {/* Simple Toggle Button */}
-      <TouchableOpacity
-        style={styles.toggleButton}
-        onPress={() => setIsControlsVisible(!isControlsVisible)}
-      >
-        <Text style={styles.toggleButtonText}>
-          {isControlsVisible ? "Hide" : "Show"}
-        </Text>
-      </TouchableOpacity>
-
-      {/* Control Panel */}
-      {isControlsVisible && (
-        <View style={styles.controlPanel}>
-          <Text style={styles.title}>
-            Photo Locations: {geoJSON.features.length}
-          </Text>
-          <ScrollView>
-            {Object.entries(layerVisibility).map(([layer, isVisible]) => (
-              <View key={layer} style={styles.toggleRow}>
-                <Text style={styles.toggleText}>
-                  {layer.charAt(0).toUpperCase() + layer.slice(1)}
-                </Text>
-                <Switch
-                  value={isVisible}
-                  onValueChange={() =>
-                    toggleLayer(layer as keyof LayerVisibility)
-                  }
-                />
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-      )}
+      {/* Controls Bar */}
+      <ControlsBar
+        layerVisibility={layerVisibility}
+        toggleLayer={toggleLayer}
+        isControlsVisible={isControlsVisible}
+        toggleControls={toggleControls}
+        animation={animation} // Pass animation state
+      />
     </View>
   );
 };
@@ -344,42 +332,6 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
-  },
-  controlPanel: {
-    position: "absolute",
-    top: 150,
-    left: 10,
-    backgroundColor: "rgba(255,255,255,0.9)",
-    padding: 10,
-    borderRadius: 5,
-    maxHeight: 300,
-    width: 200,
-  },
-  toggleButton: {
-    position: "absolute",
-    top: 100,
-    left: 10,
-    backgroundColor: "rgba(255,255,255,0.9)",
-    padding: 10,
-    borderRadius: 5,
-    zIndex: 1,
-  },
-  toggleButtonText: {
-    fontWeight: "bold",
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  toggleRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginVertical: 5,
-  },
-  toggleText: {
-    marginRight: 10,
   },
 });
 
