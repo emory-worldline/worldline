@@ -1,5 +1,6 @@
 import { View, Image, Alert } from "react-native";
 import { styles } from "./styles/IndexStyles";
+import { LinearGradient } from "expo-linear-gradient";
 import GradientText from "@/components/GradientText";
 import GradientButton from "@/components/GradientButton";
 import PrivacyPolicyButton from "@/components/PrivacyPolicyButton";
@@ -31,16 +32,24 @@ export default function Index() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.globe}>
-        <Image source={Globe} style={styles.globe}></Image>
+    <LinearGradient
+      colors={["#2B2672", "#212121"]}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
+      locations={[0, 0.55]}
+      style={styles.gradientBackground}
+    >
+      <View style={styles.container}>
+        <View style={styles.globe}>
+          <Image source={Globe} style={styles.globe}></Image>
+        </View>
+
+        <GradientText text="worldline" style={styles} />
+
+        <GradientButton text="Get Started" onPress={handleStart} style={styles} />
+
+        <PrivacyPolicyButton />
       </View>
-
-      <GradientText text="worldline" style={styles} />
-
-      <GradientButton text="Get Started" onPress={handleStart} style={styles} />
-
-      <PrivacyPolicyButton />
-    </View>
+    </LinearGradient>
   );
 }

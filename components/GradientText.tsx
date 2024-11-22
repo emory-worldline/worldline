@@ -21,7 +21,7 @@ export default function GradientText(props: GradientTextProps) {
       }
     >
       <LinearGradient
-        colors={["rgba(53,203,169,1)", "rgba(109,53,183,1)"]}
+        colors={["rgba(53,85,165,1)", "rgba(6,214,160,1)"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
       >
