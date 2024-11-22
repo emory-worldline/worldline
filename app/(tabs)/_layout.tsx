@@ -8,9 +8,9 @@ export default function TabsLayout() {
       screenOptions={{ headerShown: false }}
     >
       <Tabs.Screen
-        name="social"
+        name="stats"
         options={{
-          title: "Social",
+          title: "Stats",
         }}
       />
       <Tabs.Screen

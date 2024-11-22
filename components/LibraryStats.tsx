@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { View, Text, Button, ScrollView, Alert } from "react-native";
+import { View, Text, TextProps, Button, ScrollView, Alert } from "react-native";
 import * as MediaLibrary from "expo-media-library";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -309,6 +309,10 @@ const LibraryAnalyzer: React.FC = () => {
     }
   }, []);
 
+  const StyledText: React.FC<TextProps> = ({ style, ...props }) => (
+    <Text style={[{ color: "#FFFFFF" }, style]} {...props} />
+  );
+
   return (
     <ScrollView style={{ flex: 1, padding: 20 }}>
       {!processing && !stats && (
@@ -317,113 +321,111 @@ const LibraryAnalyzer: React.FC = () => {
       {!processing && stats && (
         <Button title="Reprocess Media Library" onPress={analyzeMediaLibrary} />
       )}
-      {processing && <Text>Processing... {progress} items analyzed</Text>}
+      {processing && (
+        <StyledText>Processing... {progress} items analyzed</StyledText>
+      )}
       {stats && (
         <View>
-          <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
+          <StyledText
+            style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}
+          >
             Media Library Stats
-          </Text>
-          <Text style={{ fontWeight: "bold", marginTop: 10 }}>
+          </StyledText>
+          <StyledText style={{ fontWeight: "bold", marginTop: 10 }}>
             Total Media:{" "}
             {stats.localPhotos +
               stats.localVideos +
               stats.networkPhotos +
               stats.networkVideos}
-          </Text>
-          <Text>Local Photos: {stats.localPhotos}</Text>
-          <Text>Network Photos: {stats.networkPhotos}</Text>
-          <Text>Local Videos: {stats.localVideos}</Text>
-          <Text>Network Videos: {stats.networkVideos}</Text>
-          <Text>
+          </StyledText>
+          <StyledText>Local Photos: {stats.localPhotos}</StyledText>
+          <StyledText>Network Photos: {stats.networkPhotos}</StyledText>
+          <StyledText>Local Videos: {stats.localVideos}</StyledText>
+          <StyledText>Network Videos: {stats.networkVideos}</StyledText>
+          <StyledText>
             Total Video Duration: {(stats.totalVideoDuration / 60).toFixed(2)}{" "}
             minutes
-          </Text>
-          <Text>
+          </StyledText>
+          <StyledText>
             Longest Video Duration: {(stats.longestVideo / 60).toFixed(2)}{" "}
             minutes
-          </Text>
-          <Text style={{ fontWeight: "bold", marginTop: 10 }}>Extremes:</Text>
-          <Text>Highest: {stats.highest.toFixed(2)} meters</Text>
-          <Text>
+          </StyledText>
+          <StyledText style={{ fontWeight: "bold", marginTop: 10 }}>
+            Extremes:
+          </StyledText>
+          <StyledText>Highest: {stats.highest.toFixed(2)} meters</StyledText>
+          <StyledText>
             Lowest:{" "}
             {stats.lowest === Infinity
               ? "N/A"
               : stats.lowest.toFixed(2) + " meters"}
-          </Text>
-          <Text>Fastest: {stats.fastest.toFixed(2)} km/h</Text>
+          </StyledText>
+          <StyledText>Fastest: {stats.fastest.toFixed(2)} km/h</StyledText>
 
-          <Text style={{ fontWeight: "bold", marginTop: 10 }}>File Types:</Text>
+          <StyledText style={{ fontWeight: "bold", marginTop: 10 }}>
+            File Types:
+          </StyledText>
           {Object.entries(stats.fileTypes)
             .sort((a, b) => b[1] - a[1])
             .map(([ratio, count]) => (
-              <Text key={ratio}>
+              <StyledText key={ratio}>
                 {ratio}: {count}
-              </Text>
+              </StyledText>
             ))}
 
-          <Text style={{ fontWeight: "bold", marginTop: 10 }}>
+          <StyledText style={{ fontWeight: "bold", marginTop: 10 }}>
             Orientations:
-          </Text>
+          </StyledText>
           {Object.entries(stats.orientations)
             .sort((a, b) => b[1] - a[1])
             .map(([orientation, count]) => (
-              <Text key={orientation}>
+              <StyledText key={orientation}>
                 {orientation}: {count}
-              </Text>
+              </StyledText>
             ))}
 
-          <Text style={{ fontWeight: "bold", marginTop: 10 }}>
+          <StyledText style={{ fontWeight: "bold", marginTop: 10 }}>
             Top 5 Aspect Ratios:
-          </Text>
+          </StyledText>
           {Object.entries(stats.aspectRatios)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 5)
             .map(([ratio, count]) => (
-              <Text key={ratio}>
+              <StyledText key={ratio}>
                 {ratio}: {count}
-              </Text>
+              </StyledText>
             ))}
 
-          <Text style={{ fontWeight: "bold", marginTop: 10 }}>
+          <StyledText style={{ fontWeight: "bold", marginTop: 10 }}>
             Top 5 Camera Models:
-          </Text>
+          </StyledText>
           {Object.entries(stats.cameraModels)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 5)
             .map(([model, count]) => (
-              <Text key={model}>
+              <StyledText key={model}>
                 {model}: {count}
-              </Text>
+              </StyledText>
             ))}
 
-          <Text style={{ fontWeight: "bold", marginTop: 10 }}>
-            Top 5 Lens Models:
-          </Text>
-          {Object.entries(stats.lensModels)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 5)
-            .map(([model, count]) => (
-              <Text key={model}>
-                {model}: {count}
-              </Text>
-            ))}
-
-          <Text style={{ fontWeight: "bold", marginTop: 10 }}>By Year:</Text>
+          <StyledText style={{ fontWeight: "bold", marginTop: 10 }}>
+            By Year:
+          </StyledText>
           {Object.entries(stats.creationYears)
             .sort(([a], [b]) => Number(b) - Number(a))
             .map(([year, count]) => (
-              <Text key={year}>
+              <StyledText key={year}>
                 {year}: {count}
-              </Text>
+              </StyledText>
             ))}
 
-          <Text style={{ fontWeight: "bold", marginTop: 10 }}>
+          <StyledText style={{ fontWeight: "bold", marginTop: 10 }}>
             By Time of Day:
-          </Text>
+          </StyledText>
           {Object.entries(stats.timeOfDay).map(([time, count]) => (
-            <Text key={time}>
+            <StyledText key={time}>
               {time}: {count}
-            </Text>
+            </StyledText>
           ))}
         </View>
       )}

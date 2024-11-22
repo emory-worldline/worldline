@@ -11,16 +11,11 @@ import {
 import MapboxGL from "@rnmapbox/maps";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
+import { useIsFocused } from "@react-navigation/native";
+import { PhotoLocation, STORAGE_KEYS } from "@/types/mediaTypes";
 import ControlsBar from "./ControlsBar";
 
 MapboxGL.setAccessToken(Constants.expoConfig?.extra?.mapboxPublicKey || "");
-
-interface PhotoLocation {
-  id: string;
-  latitude: number;
-  longitude: number;
-  timestamp: number;
-}
 
 interface GeoJSONFeature {
   type: "Feature";
@@ -42,11 +37,8 @@ export interface LayerVisibility {
   buildings: boolean;
 }
 
-const STORAGE_KEYS = {
-  photoLocations: "photoLocations",
-} as const;
-
 const LocationViewer: React.FC = () => {
+  const isFocused = useIsFocused();
   const [geoJSON, setGeoJSON] = useState<{
     type: "FeatureCollection";
     features: GeoJSONFeature[];
@@ -68,62 +60,65 @@ const LocationViewer: React.FC = () => {
   const toggleControls = () => {
     setIsControlsVisible((prev) => !prev);
     Animated.timing(animation, {
-      toValue: isControlsVisible ? 70 : 300,    // target height (collapsed: first value, expanded: second value)
-      duration: 300,                            // animation duration in ms
-      useNativeDriver: false
+      toValue: isControlsVisible ? 70 : 300, // target height (collapsed: first value, expanded: second value)
+      duration: 300, // animation duration in ms
+      useNativeDriver: false,
     }).start();
   };
 
   // Load locations from storage
-  useEffect(() => {
-    const loadLocations = async () => {
-      try {
-        const locationsString = await AsyncStorage.getItem(
-          STORAGE_KEYS.photoLocations,
+  const loadLocations = async () => {
+    try {
+      const locationsString = await AsyncStorage.getItem(
+        STORAGE_KEYS.photoLocations,
+      );
+      if (locationsString) {
+        const locations = JSON.parse(locationsString);
+        const validLocations = locations.filter(
+          (loc: any) => loc.latitude && loc.longitude,
         );
-        if (locationsString) {
-          const locations = JSON.parse(locationsString);
-          const validLocations = locations.filter(
-            (loc: any) => loc.latitude && loc.longitude,
-          );
 
-          // Convert to GeoJSON
-          const features: GeoJSONFeature[] = validLocations.map(
-            (loc: PhotoLocation) => ({
-              type: "Feature",
-              geometry: {
-                type: "Point",
-                coordinates: [loc.longitude, loc.latitude],
-              },
-              properties: {
-                id: loc.id,
-                timestamp: loc.timestamp,
-              },
+        // Convert to GeoJSON
+        const features: GeoJSONFeature[] = validLocations.map(
+          (loc: PhotoLocation) => ({
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: [loc.longitude, loc.latitude],
+            },
+            properties: {
+              id: loc.id,
+              timestamp: loc.timestamp,
+            },
+          }),
+        );
+
+        setGeoJSON({
+          type: "FeatureCollection",
+          features,
+        });
+
+        if (features.length > 0) {
+          const sum = features.reduce(
+            (acc, feature) => ({
+              lng: acc.lng + feature.geometry.coordinates[0],
+              lat: acc.lat + feature.geometry.coordinates[1],
             }),
+            { lng: 0, lat: 0 },
           );
-
-          setGeoJSON({
-            type: "FeatureCollection",
-            features,
-          });
-
-          if (features.length > 0) {
-            const sum = features.reduce(
-              (acc, feature) => ({
-                lng: acc.lng + feature.geometry.coordinates[0],
-                lat: acc.lat + feature.geometry.coordinates[1],
-              }),
-              { lng: 0, lat: 0 },
-            );
-            setCenter([sum.lng / features.length, sum.lat / features.length]);
-          }
+          setCenter([sum.lng / features.length, sum.lat / features.length]);
         }
-      } catch (error) {
-        console.error("Error loading locations:", error);
       }
-    };
-    loadLocations();
-  }, []);
+    } catch (error) {
+      console.error("Error loading locations:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (isFocused) {
+      loadLocations();
+    }
+  }, [isFocused]);
 
   const toggleLayer = (layerName: keyof LayerVisibility) => {
     setLayerVisibility((prev) => ({
@@ -317,7 +312,7 @@ const LocationViewer: React.FC = () => {
           </MapboxGL.ShapeSource>
         )}
       </MapboxGL.MapView>
-      
+
       {/* Controls Bar */}
       <ControlsBar
         layerVisibility={layerVisibility}
