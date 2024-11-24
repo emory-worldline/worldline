@@ -3,11 +3,12 @@ import { View, Text, StyleSheet, Pressable } from "react-native";
 
 export default function ViewsScreen() {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const viewNames = ["View 1", "View 2", "View 3", "View 4"];
 
   return (
     <View style={styles.container}>
       <View style={styles.buttonGroup}>
-        {[...Array(4)].map((_, index) => (
+        {viewNames.map((viewName, index) => (
           <Pressable key={index} onPress={() => setSelectedIndex(index)}>
             <View
               style={[
@@ -15,7 +16,7 @@ export default function ViewsScreen() {
                 selectedIndex === index && styles.selectedButton,
               ]}
             >
-              <Text style={styles.buttonText}>{`View ${index + 1}`}</Text>
+              <Text style={styles.buttonText}>{viewName}</Text>
             </View>
           </Pressable>
         ))}
