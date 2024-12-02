@@ -20,10 +20,7 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
 }) => {
   return (
     <Animated.View style={[styles.controlsBar, { height: animation }]}>
-      <TouchableOpacity
-        style={styles.controlsToggle}
-        onPress={toggleControls}
-      >
+      <TouchableOpacity style={styles.controlsToggle} onPress={toggleControls}>
         <MaterialIcons
           name={isControlsVisible ? "keyboard-arrow-up" : "layers"}
           size={30}
@@ -32,7 +29,9 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
       </TouchableOpacity>
 
       {isControlsVisible &&
-        (Object.entries(layerVisibility) as [keyof LayerVisibility, boolean][]).map(([layer, isVisible]) => (
+        (
+          Object.entries(layerVisibility) as [keyof LayerVisibility, boolean][]
+        ).map(([layer, isVisible]) => (
           <TouchableOpacity
             key={layer}
             style={styles.controlsButton}
@@ -66,6 +65,20 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
                 color={isVisible ? "#FFD700" : "#FFF"}
               />
             )}
+            {layer === "buildings" && (
+              <FontAwesome
+                name="building"
+                size={30}
+                color={isVisible ? "#FFD700" : "#FFF"}
+              />
+            )}
+            {layer === "worldline" && (
+              <FontAwesome
+                name="search"
+                size={30}
+                color={isVisible ? "#FFD700" : "#FFF"}
+              />
+            )}
           </TouchableOpacity>
         ))}
     </Animated.View>
@@ -82,8 +95,8 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     zIndex: 2,
     alignItems: "center",
-    overflow: "hidden",
-    paddingVertical: 10
+    overflow: "scroll",
+    paddingVertical: 10,
   },
   controlsToggle: {
     alignItems: "center",

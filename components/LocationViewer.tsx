@@ -11,11 +11,16 @@ import {
 import MapboxGL from "@rnmapbox/maps";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
-import { useIsFocused } from "@react-navigation/native";
-import { PhotoLocation, STORAGE_KEYS } from "@/types/mediaTypes";
 import ControlsBar from "./ControlsBar";
 
 MapboxGL.setAccessToken(Constants.expoConfig?.extra?.mapboxPublicKey || "");
+
+interface PhotoLocation {
+  id: string;
+  latitude: number;
+  longitude: number;
+  timestamp: number;
+}
 
 interface GeoJSONFeature {
   type: "Feature";
@@ -35,14 +40,54 @@ export interface LayerVisibility {
   clusters: boolean;
   timeline: boolean;
   buildings: boolean;
+  worldline: boolean;
 }
 
+const STORAGE_KEYS = {
+  photoLocations: "photoLocations",
+} as const;
+
 const LocationViewer: React.FC = () => {
-  const isFocused = useIsFocused();
   const [geoJSON, setGeoJSON] = useState<{
     type: "FeatureCollection";
     features: GeoJSONFeature[];
   }>({ type: "FeatureCollection", features: [] });
+  const [geoJSONLine, setGeoJSONLine] = useState<
+    GeoJSON.FeatureCollection<GeoJSON.LineString>
+  >({
+    type: "FeatureCollection",
+    features: [
+      {
+        type: "Feature",
+        geometry: {
+          type: "LineString",
+          coordinates: [],
+        },
+        properties: {},
+      },
+    ],
+  });
+
+  const [sortedCoordinates, setSortedCoordinates] = useState<
+    [number, number][]
+  >([]);
+
+  const [interpolatedCoords, setInterpolatedCoords] = useState<
+    [number, number][]
+  >([]);
+
+  // Camera States
+  const [isCameraInitialized, setIsCameraInitialized] = useState(false);
+  const cameraRef = useRef<MapboxGL.Camera>(null);
+  const previousZoomLevelRef = useRef<number>(14); // To prevent sharp zoom changes
+
+  // Worldline Animation States
+  const animationRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number>(0);
+  const totalPointsRef = useRef<number>(0);
+  const animationDurationRef = useRef<number>(0);
+  const timePerPointRef = useRef<number>(0);
+  const indexRef = useRef<number>(0);
 
   const [center, setCenter] = useState<[number, number]>([-122.4324, 37.7882]);
 
@@ -52,73 +97,165 @@ const LocationViewer: React.FC = () => {
     clusters: false,
     timeline: false,
     buildings: true, // Default buildings to visible
+    worldline: false,
   });
 
   // animate controls bar
   const [isControlsVisible, setIsControlsVisible] = useState(false);
-  const animation = useRef(new Animated.Value(70)).current;
+  const interpolateLine = (
+    coordinates: [number, number][],
+    numPointsBetween: number,
+  ): [number, number][] => {
+    const interpolatedCoordinates: [number, number][] = [];
+
+    for (let i = 0; i < coordinates.length - 1; i++) {
+      const start = coordinates[i];
+      const end = coordinates[i + 1];
+
+      interpolatedCoordinates.push(start);
+
+      for (let j = 1; j <= numPointsBetween; j++) {
+        const t = j / (numPointsBetween + 1);
+        const interpolatedPoint: [number, number] = [
+          start[0] + (end[0] - start[0]) * t,
+          start[1] + (end[1] - start[1]) * t,
+        ];
+        interpolatedCoordinates.push(interpolatedPoint);
+      }
+    }
+
+    interpolatedCoordinates.push(coordinates[coordinates.length - 1]);
+
+    return interpolatedCoordinates;
+  };
+
+  const animation = useRef(new Animated.Value(125)).current;
   const toggleControls = () => {
     setIsControlsVisible((prev) => !prev);
     Animated.timing(animation, {
-      toValue: isControlsVisible ? 70 : 300, // target height (collapsed: first value, expanded: second value)
+      toValue: isControlsVisible ? 70 : 410, // target height (collapsed: first value, expanded: second value)
       duration: 300, // animation duration in ms
       useNativeDriver: false,
     }).start();
   };
 
   // Load locations from storage
-  const loadLocations = async () => {
-    try {
-      const locationsString = await AsyncStorage.getItem(
-        STORAGE_KEYS.photoLocations,
-      );
-      if (locationsString) {
-        const locations = JSON.parse(locationsString);
-        const validLocations = locations.filter(
-          (loc: any) => loc.latitude && loc.longitude,
+  useEffect(() => {
+    const loadLocations = async () => {
+      try {
+        const locationsString = await AsyncStorage.getItem(
+          STORAGE_KEYS.photoLocations,
         );
-
-        // Convert to GeoJSON
-        const features: GeoJSONFeature[] = validLocations.map(
-          (loc: PhotoLocation) => ({
-            type: "Feature",
-            geometry: {
-              type: "Point",
-              coordinates: [loc.longitude, loc.latitude],
-            },
-            properties: {
-              id: loc.id,
-              timestamp: loc.timestamp,
-            },
-          }),
-        );
-
-        setGeoJSON({
-          type: "FeatureCollection",
-          features,
-        });
-
-        if (features.length > 0) {
-          const sum = features.reduce(
-            (acc, feature) => ({
-              lng: acc.lng + feature.geometry.coordinates[0],
-              lat: acc.lat + feature.geometry.coordinates[1],
-            }),
-            { lng: 0, lat: 0 },
+        if (locationsString) {
+          const locations = JSON.parse(locationsString);
+          const validLocations = locations.filter(
+            (loc: any) => loc.latitude && loc.longitude,
           );
-          setCenter([sum.lng / features.length, sum.lat / features.length]);
+
+          // Convert to GeoJSON
+          const features: GeoJSONFeature[] = validLocations.map(
+            (loc: PhotoLocation) => ({
+              type: "Feature",
+              geometry: {
+                type: "Point",
+                coordinates: [loc.longitude, loc.latitude],
+              },
+              properties: {
+                id: loc.id,
+                timestamp: loc.timestamp,
+              },
+            }),
+          );
+
+          setGeoJSON({
+            type: "FeatureCollection",
+            features,
+          });
+
+          const coordinates: [number, number][] = features.map(
+            (feature) => feature.geometry.coordinates,
+          );
+
+          setSortedCoordinates(coordinates);
+
+          const numPointsBetween = 100; // Adjust this to increase/decrease smoothness
+          const interpolatedCoords = interpolateLine(
+            coordinates,
+            numPointsBetween,
+          );
+
+          setInterpolatedCoords(interpolatedCoords);
+
+          if (features.length > 0) {
+            const sum = features.reduce(
+              (acc, feature) => ({
+                lng: acc.lng + feature.geometry.coordinates[0],
+                lat: acc.lat + feature.geometry.coordinates[1],
+              }),
+              { lng: 0, lat: 0 },
+            );
+            setCenter([sum.lng / features.length, sum.lat / features.length]);
+          }
         }
+      } catch (error) {
+        console.error("Error loading locations:", error);
       }
-    } catch (error) {
-      console.error("Error loading locations:", error);
+    };
+    loadLocations();
+  }, []);
+
+  // Initialize camera position
+  useEffect(() => {
+    if (interpolatedCoords.length > 0 && !isCameraInitialized) {
+      const initialCoordinate = interpolatedCoords[0];
+      cameraRef.current?.setCamera({
+        centerCoordinate: initialCoordinate,
+        zoomLevel: 1, // Adjust zoom level as needed
+        pitch: 55, // Adjust pitch as needed
+        animationDuration: 0,
+      });
+      setIsCameraInitialized(true);
     }
+  }, [interpolatedCoords, isCameraInitialized]);
+
+  // Convert degrees to radians
+  const deg2rad = (deg: number) => {
+    return deg * (Math.PI / 180);
   };
 
-  useEffect(() => {
-    if (isFocused) {
-      loadLocations();
+  // Haversine Formula courtesy of ChatGPT
+  const getDistanceInKm = (
+    coord1: [number, number],
+    coord2: [number, number],
+  ) => {
+    const [lon1, lat1] = coord1;
+    const [lon2, lat2] = coord2;
+
+    const R = 6371; // Radius of the Earth in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(deg2rad(lat1)) *
+        Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d = R * c;
+    return d; // Distance in km
+  };
+
+  const getZoomLevelForDistance = (distanceInKm: number) => {
+    if (distanceInKm < 0.1) {
+      // Less than 100 meters
+      return 12;
+    } else if (distanceInKm < 0.5) {
+      // Less than 500 meters
+      return 9;
+    } else {
+      return 3; // Default zoom level for larger distances
     }
-  }, [isFocused]);
+  };
 
   const toggleLayer = (layerName: keyof LayerVisibility) => {
     setLayerVisibility((prev) => ({
@@ -139,6 +276,123 @@ const LocationViewer: React.FC = () => {
     ];
   };
 
+  const animateLine = (timestamp: number) => {
+    const progress = timestamp - startTimeRef.current;
+    const pointsToAdd = Math.floor(progress / timePerPointRef.current);
+
+    if (
+      pointsToAdd > indexRef.current &&
+      indexRef.current < interpolatedCoords.length
+    ) {
+      const newIndex = Math.min(pointsToAdd, interpolatedCoords.length - 1);
+      const newCoords = interpolatedCoords.slice(0, newIndex + 1);
+
+      setGeoJSONLine((prev) => ({
+        ...prev,
+        features: [
+          {
+            ...prev.features[0],
+            geometry: {
+              ...prev.features[0].geometry,
+              coordinates: newCoords,
+            },
+          },
+        ],
+      }));
+      indexRef.current = newIndex;
+
+      const coordinate = interpolatedCoords[newIndex];
+
+      let targetZoomLevel = 1; // Default to most zoomed out
+      if (newIndex > 0) {
+        const previousCoordinate = interpolatedCoords[newIndex - 1];
+
+        if (newIndex < interpolatedCoords.length - 1) {
+          const nextCoord = interpolatedCoords[newIndex + 1];
+          const distance = getDistanceInKm(nextCoord, coordinate);
+
+          targetZoomLevel = getZoomLevelForDistance(distance);
+
+          // Smooth zoom interpolation
+          const zoomTransitionFactor = 0.3; // Adjust between 0 (no change) and 1 (immediate change)
+          const smoothZoomLevel =
+            previousZoomLevelRef.current +
+            (targetZoomLevel - previousZoomLevelRef.current) *
+              zoomTransitionFactor;
+
+          previousZoomLevelRef.current = smoothZoomLevel;
+          targetZoomLevel = smoothZoomLevel;
+        } else {
+          targetZoomLevel = 3;
+        }
+
+        cameraRef.current?.setCamera({
+          centerCoordinate: coordinate,
+          zoomLevel: targetZoomLevel,
+          pitch: 45,
+          animationDuration: timePerPointRef.current,
+          animationMode: "flyTo",
+        });
+      }
+
+      if (
+        progress < animationDurationRef.current &&
+        indexRef.current < interpolatedCoords.length
+      ) {
+        animationRef.current = requestAnimationFrame(animateLine);
+      }
+    }
+  };
+  useEffect(() => {
+    if (layerVisibility.worldline && interpolatedCoords.length > 0) {
+      // Reset Camera
+      setIsCameraInitialized(false);
+
+      // Start the animation
+      startTimeRef.current = performance.now();
+      totalPointsRef.current = interpolatedCoords.length;
+      animationDurationRef.current = 180000; // 3 minute animation duration
+      timePerPointRef.current =
+        animationDurationRef.current / totalPointsRef.current;
+
+      indexRef.current = 0;
+      setGeoJSONLine((prev) => ({
+        ...prev,
+        features: [
+          {
+            ...prev.features[0],
+            geometry: { ...prev.features[0].geometry, coordinates: [] },
+          },
+        ],
+      }));
+      animationRef.current = requestAnimationFrame(animateLine);
+    } else {
+      // Stop the animation
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+      // Clear the line
+      setGeoJSONLine((prev) => ({
+        ...prev,
+        features: [
+          {
+            ...prev.features[0],
+            geometry: {
+              ...prev.features[0].geometry,
+              coordinates: [],
+            },
+          },
+        ],
+      }));
+      // Clean up when the component unmounts
+      return () => {
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+        }
+      };
+    }
+  }, [layerVisibility.worldline, interpolatedCoords]);
+
   return (
     <View style={styles.container}>
       <MapboxGL.MapView
@@ -149,11 +403,12 @@ const LocationViewer: React.FC = () => {
         compassEnabled={true}
       >
         <MapboxGL.Camera
+          ref={cameraRef}
           zoomLevel={1}
           centerCoordinate={center}
           pitch={0}
-          animationMode="moveTo"
-          animationDuration={0}
+          animationMode="easeTo"
+          animationDuration={1000}
         />
 
         {/* 3D Buildings Layer */}
@@ -307,6 +562,22 @@ const LocationViewer: React.FC = () => {
                 circleColor: getTimelineColor(),
                 circleStrokeWidth: 2,
                 circleStrokeColor: "white",
+              }}
+            />
+          </MapboxGL.ShapeSource>
+        )}
+
+        {/* Worldline Layer */}
+        {layerVisibility.worldline && (
+          <MapboxGL.ShapeSource id="worldline" shape={geoJSONLine}>
+            <MapboxGL.LineLayer
+              id="line-layer"
+              style={{
+                lineColor: "#ed6498",
+                lineWidth: 4,
+                lineOpacity: 0.7,
+                lineCap: "round",
+                lineJoin: "round",
               }}
             />
           </MapboxGL.ShapeSource>
