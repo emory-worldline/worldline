@@ -177,6 +177,9 @@ export const useMediaProcessing = () => {
           progress: totalProcessed,
         }));
 
+        // sort by timestamp
+        locationData.sort((a, b) => a.timestamp - b.timestamp);
+
         try {
           await AsyncStorage.setItem(
             STORAGE_KEYS.mediaStats,
