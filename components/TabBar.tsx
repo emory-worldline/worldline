@@ -7,6 +7,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const icon = {
     stats: (props: any) => <Ionicons name="stats-chart" size={30} {...props} />,
+    views: (props: any) => <Ionicons name="grid" size={30} {...props} />,
     index: (props: any) => <Entypo name="globe" size={30} {...props} />,
     settings: (props: any) => <FontAwesome name="gear" size={30} {...props} />,
   };
