@@ -43,6 +43,15 @@ const styles = StyleSheet.create({
   },
   text: {
     color: "#FFFFFF",
-    fontSize: 18,
+    fontSize: 15,
+    textAlign: "left"
+    paddingLeft: 20,
   },
+  header: {
+    color: "#FFFFFF",
+    fontSize: 20,
+    textAlign: "center",
+    fontWeight: "bold",
+  },
+
 });
