@@ -3,7 +3,7 @@ import { useState, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   MediaStats,
-  initialMediaStats,
+  getInitialMediaStats,
   PhotoLocation,
   ExifInfo,
   ProcessingStatus,
@@ -143,7 +143,8 @@ export const useMediaProcessing = () => {
     setStatus({ isProcessing: true, progress: 0 });
 
     try {
-      let mediaStats = initialMediaStats;
+      let mediaStats = getInitialMediaStats();
+      console.log("processingsetsts", mediaStats);
       let locationData: PhotoLocation[] = [];
       let hasNextPage = true;
       let endCursor: string | undefined;

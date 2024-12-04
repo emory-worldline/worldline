@@ -17,7 +17,7 @@ export interface MediaStats {
   longestVideo: number;
 }
 
-export const initialMediaStats: MediaStats = {
+export const initialMediaStats: MediaStats = Object.freeze({
   localPhotos: 0,
   localVideos: 0,
   networkPhotos: 0,
@@ -34,6 +34,10 @@ export const initialMediaStats: MediaStats = {
   fastest: 0,
   totalVideoDuration: 0,
   longestVideo: 0,
+});
+
+export const getInitialMediaStats = (): MediaStats => {
+  return JSON.parse(JSON.stringify(initialMediaStats));
 };
 
 export interface PhotoLocation {

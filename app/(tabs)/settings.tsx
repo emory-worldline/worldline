@@ -2,6 +2,9 @@ import { View, Text, StyleSheet, Alert } from "react-native";
 import GradientButton from "@/components/GradientButton";
 import GradientText from "@/components/GradientText";
 import { useMediaProcessing } from "@/hooks/useMediaProcessing";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { STORAGE_KEYS } from "@/types/mediaTypes";
+import Constants from "expo-constants";
 
 export default function SettingsScreen() {
   const { status, startProcessing } = useMediaProcessing();
@@ -13,6 +16,19 @@ export default function SettingsScreen() {
         "Please grant media library permissions to analyze your photos",
       );
       return;
+    }
+  };
+
+  const clearData = async () => {
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEYS.mediaStats);
+      await AsyncStorage.removeItem(STORAGE_KEYS.photoLocations);
+      console.log("Storage successfully cleared");
+
+      Alert.alert("Success", "Data cleared successfully.");
+    } catch (error) {
+      console.error("Error clearing storage:", error);
+      Alert.alert("Error", "Failed to clear data");
     }
   };
 
@@ -49,6 +65,16 @@ export default function SettingsScreen() {
           <Text style={{ color: "white" }}>Progress: {status.progress}</Text>
         </View>
       )}
+      <View style={{ alignItems: "center" }}>
+        <GradientButton
+          text="Clear Data"
+          onPress={clearData}
+          style={buttonStyle}
+        />
+      </View>
+      <Text style={{ color: "grey" }}>
+        {Constants.expoConfig?.name} {Constants.expoConfig?.version}
+      </Text>
     </View>
   );
 }
