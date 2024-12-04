@@ -60,6 +60,7 @@ export type ExifInfo = {
 export const STORAGE_KEYS = {
   mediaStats: "mediaStats",
   photoLocations: "photoLocations",
+  worldLineLocations: "worldLineLocations",
 };
 
 export const BATCH_SIZE = 50;
