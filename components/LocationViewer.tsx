@@ -14,6 +14,8 @@ import Constants from "expo-constants";
 import { useIsFocused } from "@react-navigation/native";
 import { PhotoLocation, STORAGE_KEYS } from "@/types/mediaTypes";
 import ControlsBar from "./ControlsBar";
+import { useContext } from "react";
+import { DarkModeContext } from "@/components/context/DarkModeContext";
 
 MapboxGL.setAccessToken(Constants.expoConfig?.extra?.mapboxPublicKey || "");
 
@@ -139,10 +141,13 @@ const LocationViewer: React.FC = () => {
     ];
   };
 
+  const { isDarkMode } = useContext(DarkModeContext);
+
   return (
     <View style={styles.container}>
       <MapboxGL.MapView
         style={styles.map}
+        styleURL={isDarkMode ? "mapbox://styles/mapbox/dark-v11" : ""}
         projection="globe"
         rotateEnabled={true}
         pitchEnabled={true}
