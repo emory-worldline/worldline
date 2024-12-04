@@ -248,12 +248,16 @@ const LocationViewer: React.FC = () => {
   const getZoomLevelForDistance = (distanceInKm: number) => {
     if (distanceInKm < 0.1) {
       // Less than 100 meters
-      return 12;
+      return 16;
     } else if (distanceInKm < 0.5) {
       // Less than 500 meters
+      return 12;
+    } else if (distanceInKm < 1.5) {
       return 9;
+    } else if (distanceInKm < 5) {
+      return 3;
     } else {
-      return 3; // Default zoom level for larger distances
+      return 2; // Default zoom level for larger distances
     }
   };
 
@@ -305,8 +309,6 @@ const LocationViewer: React.FC = () => {
 
       let targetZoomLevel = 1; // Default to most zoomed out
       if (newIndex > 0) {
-        const previousCoordinate = interpolatedCoords[newIndex - 1];
-
         if (newIndex < interpolatedCoords.length - 1) {
           const nextCoord = interpolatedCoords[newIndex + 1];
           const distance = getDistanceInKm(nextCoord, coordinate);
@@ -314,7 +316,7 @@ const LocationViewer: React.FC = () => {
           targetZoomLevel = getZoomLevelForDistance(distance);
 
           // Smooth zoom interpolation
-          const zoomTransitionFactor = 0.3; // Adjust between 0 (no change) and 1 (immediate change)
+          const zoomTransitionFactor = 0.1; // Adjust between 0 (no change) and 1 (immediate change)
           const smoothZoomLevel =
             previousZoomLevelRef.current +
             (targetZoomLevel - previousZoomLevelRef.current) *
@@ -351,7 +353,7 @@ const LocationViewer: React.FC = () => {
       // Start the animation
       startTimeRef.current = performance.now();
       totalPointsRef.current = interpolatedCoords.length;
-      animationDurationRef.current = 180000; // 3 minute animation duration
+      animationDurationRef.current = 90000; // 3 minute animation duration
       timePerPointRef.current =
         animationDurationRef.current / totalPointsRef.current;
 
@@ -361,11 +363,35 @@ const LocationViewer: React.FC = () => {
         features: [
           {
             ...prev.features[0],
-            geometry: { ...prev.features[0].geometry, coordinates: [] },
+            geometry: {
+              type: "LineString",
+              coordinates: [],
+            },
           },
         ],
       }));
       animationRef.current = requestAnimationFrame(animateLine);
+
+      // Add a cleanup to set final line after animation completes
+      return () => {
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+        }
+
+        // Set final line using original coordinates
+        setGeoJSONLine((prev) => ({
+          ...prev,
+          features: [
+            {
+              ...prev.features[0],
+              geometry: {
+                type: "LineString",
+                coordinates: sortedCoordinates, // Use original coordinates
+              },
+            },
+          ],
+        }));
+      };
     } else {
       // Stop the animation
       if (animationRef.current) {
@@ -378,21 +404,14 @@ const LocationViewer: React.FC = () => {
           {
             ...prev.features[0],
             geometry: {
-              ...prev.features[0].geometry,
+              type: "LineString",
               coordinates: [],
             },
           },
         ],
       }));
-      // Clean up when the component unmounts
-      return () => {
-        if (animationRef.current) {
-          cancelAnimationFrame(animationRef.current);
-        }
-      };
     }
   }, [layerVisibility.worldline, interpolatedCoords]);
-
   return (
     <View style={styles.container}>
       <MapboxGL.MapView
