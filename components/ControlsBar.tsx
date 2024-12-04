@@ -20,10 +20,7 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
 }) => {
   return (
     <Animated.View style={[styles.controlsBar, { height: animation }]}>
-      <TouchableOpacity
-        style={styles.controlsToggle}
-        onPress={toggleControls}
-      >
+      <TouchableOpacity style={styles.controlsToggle} onPress={toggleControls}>
         <MaterialIcons
           name={isControlsVisible ? "keyboard-arrow-up" : "layers"}
           size={30}
@@ -32,7 +29,9 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
       </TouchableOpacity>
 
       {isControlsVisible &&
-        (Object.entries(layerVisibility) as [keyof LayerVisibility, boolean][]).map(([layer, isVisible]) => (
+        (
+          Object.entries(layerVisibility) as [keyof LayerVisibility, boolean][]
+        ).map(([layer, isVisible]) => (
           <TouchableOpacity
             key={layer}
             style={styles.controlsButton}
@@ -83,7 +82,7 @@ const styles = StyleSheet.create({
     zIndex: 2,
     alignItems: "center",
     overflow: "hidden",
-    paddingVertical: 10
+    paddingVertical: 10,
   },
   controlsToggle: {
     alignItems: "center",
