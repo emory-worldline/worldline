@@ -1,13 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import {
-  View,
-  Text,
-  Switch,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  Animated,
-} from "react-native";
+import { View, StyleSheet, Animated } from "react-native";
 import MapboxGL from "@rnmapbox/maps";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
@@ -110,6 +102,8 @@ const LocationViewer: React.FC = () => {
           );
           setCenter([sum.lng / features.length, sum.lat / features.length]);
         }
+      } else {
+        setGeoJSON({ type: "FeatureCollection", features: [] });
       }
     } catch (error) {
       console.error("Error loading locations:", error);

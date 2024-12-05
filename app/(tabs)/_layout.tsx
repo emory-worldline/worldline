@@ -16,6 +16,12 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
+          name="views"
+          options={{
+            title: "Views",
+          }}
+        />
+        <Tabs.Screen
           name="index"
           options={{
             title: "Maps",

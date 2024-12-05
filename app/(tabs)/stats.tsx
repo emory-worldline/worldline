@@ -1,37 +1,28 @@
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  Text,
-  Button,
-  SafeAreaView,
-  Alert,
-} from "react-native";
+import { View, ScrollView, SafeAreaView, Text } from "react-native";
 import {
   MediaStats,
-  initialMediaStats,
+  getInitialMediaStats,
   STORAGE_KEYS,
 } from "@/types/mediaTypes";
 import { useState, useEffect } from "react";
 import { useIsFocused } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import StatsCarousel from "@/components/StatCarousel";
-import { useMediaProcessing } from "@/hooks/useMediaProcessing";
 import StatGraph from "@/components/StatGraph";
 import StatPieChart from "@/components/StatPieChart";
-import GradientButton from "@/components/GradientButton";
 import GradientText from "@/components/GradientText";
 
 export default function StatsScreen() {
-  const [stats, setStats] = useState<MediaStats>(initialMediaStats);
+  const [stats, setStats] = useState<MediaStats>(getInitialMediaStats());
   const isFocused = useIsFocused();
-  const { status, startProcessing } = useMediaProcessing();
 
   const loadStoredStats = async () => {
     try {
       const storedStats = await AsyncStorage.getItem(STORAGE_KEYS.mediaStats);
       if (storedStats) {
         setStats(JSON.parse(storedStats));
+      } else {
+        setStats(getInitialMediaStats());
       }
     } catch (error) {
       console.error("Error loading stored stats:", error);
@@ -44,15 +35,12 @@ export default function StatsScreen() {
     }
   }, [isFocused]);
 
-  const reProcess = async () => {
-    const permissionGranted = await startProcessing();
-    if (!permissionGranted) {
-      Alert.alert(
-        "Please grant media library permissions to analyze your photos",
-      );
-      return;
-    }
-  };
+  const hasData =
+    Object.values(stats.creationYears).length > 0 ||
+    Object.values(stats.cameraModels).length > 0 ||
+    Object.values(stats.aspectRatios).length > 0 ||
+    Object.values(stats.fileTypes).length > 0 ||
+    Object.values(stats.timeOfDay).length > 0;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#212121" }}>
@@ -69,82 +57,67 @@ export default function StatsScreen() {
             },
           }}
         />
-        <View
-          style={{
-            margin: 12,
-            marginBottom: 20,
-            backgroundColor: "#111111",
-            padding: 8,
-            borderRadius: 8,
-          }}
-        >
-          <StatGraph yearStats={stats.creationYears} />
-        </View>
-        <StatsCarousel stats={stats} />
-        <View
-          style={{
-            justifyContent: "center",
-            flex: 1,
-            flexDirection: "row",
-            padding: 12,
-            margin: 12,
-            borderRadius: 8,
-            backgroundColor: "#111111",
-            marginVertical: 20,
-          }}
-        >
-          <StatPieChart data={stats.cameraModels} title="Camera Model" />
-          <StatPieChart data={stats.aspectRatios} title="Aspect Ratio" />
-        </View>
-        <View
-          style={{
-            justifyContent: "center",
-            flex: 1,
-            flexDirection: "row",
-            padding: 12,
-            margin: 12,
-            marginTop: 0,
-            marginBottom: 20,
-            borderRadius: 8,
-            backgroundColor: "#111111",
-          }}
-        >
-          <StatPieChart data={stats.fileTypes} title="File Type" />
-          <StatPieChart data={stats.timeOfDay} title="Time Of Day" />
-        </View>
-        <View style={{ alignItems: "center" }}>
-          <GradientButton
-            text="Process Library"
-            onPress={reProcess}
-            style={buttonStyle}
-          />
-        </View>
-        {status.isProcessing && (
-          <View style={{ alignItems: "center", padding: 12 }}>
-            <Text style={{ color: "white" }}>Progress: {status.progress}</Text>
+        {hasData ? (
+          <>
+            <View
+              style={{
+                margin: 12,
+                marginBottom: 20,
+                backgroundColor: "#111111",
+                padding: 8,
+                borderRadius: 8,
+              }}
+            >
+              <StatGraph yearStats={stats.creationYears} />
+            </View>
+            <StatsCarousel stats={stats} />
+            <View
+              style={{
+                justifyContent: "center",
+                flex: 1,
+                flexDirection: "row",
+                padding: 12,
+                margin: 12,
+                borderRadius: 8,
+                backgroundColor: "#111111",
+                marginVertical: 20,
+              }}
+            >
+              <StatPieChart data={stats.cameraModels} title="Camera Model" />
+              <StatPieChart data={stats.aspectRatios} title="Aspect Ratio" />
+            </View>
+            <View
+              style={{
+                justifyContent: "center",
+                flex: 1,
+                flexDirection: "row",
+                padding: 12,
+                margin: 12,
+                marginTop: 0,
+                marginBottom: 20,
+                borderRadius: 8,
+                backgroundColor: "#111111",
+              }}
+            >
+              <StatPieChart data={stats.fileTypes} title="File Type" />
+              <StatPieChart data={stats.timeOfDay} title="Time Of Day" />
+            </View>
+          </>
+        ) : (
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              marginTop: 20,
+            }}
+          >
+            <Text style={{ color: "white", fontSize: 18 }}>
+              No data available
+            </Text>
           </View>
         )}
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const buttonStyle = StyleSheet.create({
-  buttonGradient: {
-    width: 325,
-    height: 75,
-    borderRadius: 22.5,
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 26,
-    fontWeight: "bold",
-  },
-  buttonContainer: {
-    flex: 1,
-    width: 325,
-    height: 75,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});

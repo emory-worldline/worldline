@@ -1,11 +1,63 @@
-import { View, Text, Switch, StyleSheet } from "react-native";
-import { useContext } from "react";
+import { View, Text, StyleSheet, Alert, Switch, Pressable } from "react-native";
+import GradientButton from "@/components/GradientButton";
+import GradientText from "@/components/GradientText";
+import { useMediaProcessing } from "@/hooks/useMediaProcessing";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { STORAGE_KEYS } from "@/types/mediaTypes";
+import Constants from "expo-constants";
 import { DarkModeContext } from "@/components/context/DarkModeContext";
+import { useContext } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SettingsScreen() {
   const { isDarkMode, toggleDarkMode } = useContext(DarkModeContext);
+  const { status, startProcessing } = useMediaProcessing();
+
+  const reProcess = async () => {
+    const permissionGranted = await startProcessing();
+    if (!permissionGranted) {
+      Alert.alert(
+        "Please grant media library permissions to analyze your photos",
+      );
+      return;
+    }
+  };
+
+  const clearData = async () => {
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEYS.mediaStats);
+      await AsyncStorage.removeItem(STORAGE_KEYS.photoLocations);
+      await AsyncStorage.removeItem(STORAGE_KEYS.worldLineLocations);
+      console.log("Storage successfully cleared");
+
+      Alert.alert("Success", "Data cleared successfully.");
+    } catch (error) {
+      console.error("Error clearing storage:", error);
+      Alert.alert("Error", "Failed to clear data");
+    }
+  };
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        alignItems: "center",
+        paddingHorizontal: 24,
+        backgroundColor: "#212121",
+      }}
+    >
+      <GradientText
+        text={"Settings"}
+        style={{
+          textGradient: {
+            fontWeight: "bold",
+            fontSize: 64,
+            textAlign: "center",
+            justifyContent: "center",
+            padding: 8,
+          },
+        }}
+      />
       <View style={styles.settingContainer}>
         <Text style={styles.settingText}>Dark Mode</Text>
         <Switch value={isDarkMode} onValueChange={toggleDarkMode} />
@@ -24,23 +76,42 @@ export default function SettingsScreen() {
           </View>
         </View>
       </View>
-      <View style={[styles.settingContainer, { justifyContent: "center" }]}>
-        <Text style={styles.settingText}>Reprocess User Data</Text>
-      </View>
-      <View style={[styles.settingContainer, { justifyContent: "center" }]}>
+      <Pressable
+        onPress={reProcess}
+        style={[styles.settingContainer, { justifyContent: "center" }]}
+        disabled={status.isProcessing}
+      >
+        {status.isProcessing ? (
+          <View style={{ alignItems: "center", padding: 4 }}>
+            <Text style={{ color: "white" }}>Progress: {status.progress}</Text>
+          </View>
+        ) : (
+          <Text style={styles.settingText}>Reprocess User Data</Text>
+        )}
+      </Pressable>
+      <Pressable
+        disabled={status.isProcessing}
+        onPress={clearData}
+        style={[styles.settingContainer, { justifyContent: "center" }]}
+      >
         <Text style={styles.settingText}>Clear User Data</Text>
-      </View>
+      </Pressable>
       <View style={[styles.settingContainer, { justifyContent: "center" }]}>
         <Text style={styles.settingText}>Privacy Policy</Text>
       </View>
-    </View>
+
+      <Text style={{ color: "grey" }}>
+        {Constants.expoConfig?.name} {Constants.expoConfig?.version}
+      </Text>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+    width: 325,
+    height: 75,
     alignItems: "center",
     backgroundColor: "#212121",
     paddingHorizontal: 50,
