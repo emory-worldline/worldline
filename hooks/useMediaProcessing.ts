@@ -3,7 +3,7 @@ import { useState, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   MediaStats,
-  initialMediaStats,
+  getInitialMediaStats,
   PhotoLocation,
   ExifInfo,
   ProcessingStatus,
@@ -116,6 +116,52 @@ const processAsset = async (
   }
 };
 
+const calculateDistance = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+): number => {
+  const R = 6371e3; // Earth's radius in meters
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c; // Distance in meters
+};
+
+const convertToWLPoints = (locations: PhotoLocation[]): PhotoLocation[] => {
+  if (locations.length <= 1) return locations;
+
+  const result: PhotoLocation[] = [locations[0]]; // Always keep first point
+  const DISTANCE_THRESHOLD = 20; // 20 meters
+
+  for (let i = 1; i < locations.length; i++) {
+    const current = locations[i];
+    const prev = result[result.length - 1];
+
+    const distance = calculateDistance(
+      prev.latitude,
+      prev.longitude,
+      current.latitude,
+      current.longitude,
+    );
+
+    if (distance >= DISTANCE_THRESHOLD) {
+      result.push(current);
+    }
+  }
+
+  return result;
+};
+
 export const useMediaProcessing = () => {
   const [status, setStatus] = useState<ProcessingStatus>({
     isProcessing: false,
@@ -143,7 +189,7 @@ export const useMediaProcessing = () => {
     setStatus({ isProcessing: true, progress: 0 });
 
     try {
-      let mediaStats = initialMediaStats;
+      let mediaStats = getInitialMediaStats();
       let locationData: PhotoLocation[] = [];
       let hasNextPage = true;
       let endCursor: string | undefined;
@@ -177,6 +223,9 @@ export const useMediaProcessing = () => {
           progress: totalProcessed,
         }));
 
+        // sort by timestamp
+        locationData.sort((a, b) => a.timestamp - b.timestamp);
+
         try {
           await AsyncStorage.setItem(
             STORAGE_KEYS.mediaStats,
@@ -194,6 +243,19 @@ export const useMediaProcessing = () => {
         hasNextPage = newHasNextPage;
         endCursor = newEndCursor;
       }
+
+      let worldLineLocations = convertToWLPoints(locationData);
+
+      try {
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.worldLineLocations,
+          JSON.stringify(worldLineLocations),
+        );
+        console.log(`Saved ${worldLineLocations.length} WL locations`);
+      } catch (storageError) {
+        console.error("Error saving to storage:", storageError);
+      }
+
       if (totalProcessed >= MAX_MEDIA) {
         Alert.alert(
           "Analysis Limit Reached",

@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     zIndex: 2,
     alignItems: "center",
-    overflow: "scroll",
+    overflow: "hidden",
     paddingVertical: 10,
   },
   controlsToggle: {
