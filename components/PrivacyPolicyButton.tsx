@@ -104,8 +104,6 @@ export default function PrivacyPolicyButton() {
 
 const styles = StyleSheet.create({
   buttonContainer: {
-    position: "absolute",
-    bottom: 95,
     padding: 10,
   },
   buttonText: {

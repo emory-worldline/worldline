@@ -8,6 +8,7 @@ import Constants from "expo-constants";
 import { DarkModeContext } from "@/components/context/DarkModeContext";
 import { useContext } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
+import PrivacyPolicyButton from "@/components/PrivacyPolicyButton";
 
 export default function SettingsScreen() {
   const { isDarkMode, toggleDarkMode } = useContext(DarkModeContext);
@@ -96,8 +97,8 @@ export default function SettingsScreen() {
       >
         <Text style={styles.settingText}>Clear User Data</Text>
       </Pressable>
-      <View style={[styles.settingContainer, { justifyContent: "center" }]}>
-        <Text style={styles.settingText}>Privacy Policy</Text>
+      <View style={{ paddingVertical: 12 }}>
+        <PrivacyPolicyButton />
       </View>
 
       <Text style={{ color: "grey" }}>
