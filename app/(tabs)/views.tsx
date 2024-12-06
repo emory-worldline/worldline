@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import MapboxGL from "@rnmapbox/maps";
 import { STORAGE_KEYS } from "@/types/mediaTypes";
 import type { PhotoLocation } from "@/types/mediaTypes";
+import { useIsFocused } from "@react-navigation/native";
 
 interface GeoJSONFeature {
   type: "Feature";
@@ -42,15 +43,25 @@ export default function ClusterViewScreen() {
     type: "FeatureCollection",
     features: [],
   });
+  const [zoomLevel, setZoomLevel] = useState(13);
+  const isFocused = useIsFocused();
 
   useEffect(() => {
-    loadClusters();
+    if (isFocused) {
+      loadClusters();
+    }
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, []);
+  }, [isFocused]);
+
+  useEffect(() => {
+    if (clusters.length > 0 && selectedCluster === null) {
+      handleClusterSelect(0);
+    }
+  }, [clusters]);
 
   useEffect(() => {
     const animate = () => {
@@ -76,6 +87,9 @@ export default function ClusterViewScreen() {
       );
       if (clustersData) {
         setClusters(JSON.parse(clustersData));
+      } else {
+        setClusters([]);
+        setSelectedCluster(null);
       }
     } catch (error) {
       console.error("Error loading clusters:", error);
@@ -84,7 +98,30 @@ export default function ClusterViewScreen() {
 
   const handleClusterSelect = (index: number) => {
     setSelectedCluster(index);
-    if (clusters[index] && clusters[index].locations.length > 0) {
+    if (clusters[index]) {
+      const { boundingBox } = clusters[index];
+
+      // Calculate center of bounding box
+      const centerLat = (boundingBox.minLat + boundingBox.maxLat) / 2;
+      const centerLng = (boundingBox.minLong + boundingBox.maxLong) / 2;
+
+      // Calculate appropriate zoom level based on bounding box size
+      const latDiff = Math.abs(boundingBox.maxLat - boundingBox.minLat);
+      const lngDiff = Math.abs(boundingBox.maxLong - boundingBox.minLong);
+      const maxDiff = Math.max(latDiff, lngDiff);
+
+      let zoomLevel;
+      if (maxDiff > 0.1)
+        zoomLevel = 12; // Very large cluster
+      else if (maxDiff > 0.01)
+        zoomLevel = 13; // Large cluster
+      else if (maxDiff > 0.001)
+        zoomLevel = 15; // Medium cluster
+      else if (maxDiff > 0.0001)
+        zoomLevel = 17; // Small cluster
+      else zoomLevel = 18;
+      setZoomLevel(zoomLevel);
+
       // Convert cluster points to GeoJSON
       const features: GeoJSONFeature[] = clusters[index].locations.map(
         (loc) => ({
@@ -105,10 +142,7 @@ export default function ClusterViewScreen() {
         features,
       });
 
-      setMapCenter([
-        clusters[index].locations[0].longitude,
-        clusters[index].locations[0].latitude,
-      ]);
+      setMapCenter([centerLng, centerLat]);
       setHeading(0);
     }
   };
@@ -125,7 +159,7 @@ export default function ClusterViewScreen() {
             compassEnabled={true}
           >
             <MapboxGL.Camera
-              zoomLevel={13}
+              zoomLevel={zoomLevel}
               centerCoordinate={mapCenter}
               pitch={45}
               heading={heading}
@@ -182,33 +216,45 @@ export default function ClusterViewScreen() {
       <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        {clusters.length >= 0 ? (
-          clusters.map((cluster, index) => (
-            <Pressable key={index} onPress={() => handleClusterSelect(index)}>
-              <View
-                style={[
-                  styles.buttonContainer,
-                  selectedCluster === index && styles.selectedButton,
+        {clusters.length > 0 ? (
+          clusters.map((cluster, index) => {
+            const startDate = new Date(cluster.locations[0].timestamp);
+            const endDate = new Date(
+              cluster.locations[cluster.locations.length - 1].timestamp,
+            );
+            const isSameDay =
+              startDate.toDateString() === endDate.toDateString();
+
+            return (
+              <Pressable
+                key={index}
+                onPress={() => handleClusterSelect(index)}
+                style={({ pressed }) => [
+                  styles.clusterCard,
+                  selectedCluster === index && styles.selectedCard,
+                  pressed && styles.pressedCard,
                 ]}
               >
-                <Text style={styles.buttonText}>
-                  Cluster {index + 1} ({cluster.locations.length} photos)
+                <View style={styles.cardHeader}>
+                  <Text style={styles.photoCount}>
+                    {cluster.locations.length}
+                  </Text>
+                  <Text style={styles.photoText}>photos</Text>
+                </View>
+                <Text style={styles.dateText}>
+                  {isSameDay
+                    ? startDate.toLocaleDateString()
+                    : `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`}
                 </Text>
-                <Text style={styles.detailText}>
-                  {new Date(
-                    cluster.locations[0].timestamp,
-                  ).toLocaleDateString()}
-                  {" - "}
-                  {new Date(
-                    cluster.locations[cluster.locations.length - 1].timestamp,
-                  ).toLocaleDateString()}
-                </Text>
-              </View>
-            </Pressable>
-          ))
+              </Pressable>
+            );
+          })
         ) : (
-          <Text>No Data</Text>
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>No clusters found</Text>
+          </View>
         )}
       </ScrollView>
     </View>
@@ -216,6 +262,7 @@ export default function ClusterViewScreen() {
 }
 
 const styles = StyleSheet.create({
+  // Map related styles
   container: {
     flex: 1,
     backgroundColor: "#212121",
@@ -227,36 +274,8 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
   },
-  scrollContainer: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingVertical: 20,
-    alignItems: "center",
-  },
-  buttonContainer: {
-    borderColor: "white",
-    borderWidth: 2,
-    borderRadius: 12,
-    padding: 10,
-    width: 286,
-    height: 127,
-    marginVertical: 18,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  buttonText: {
-    fontSize: 18,
-    color: "white",
-    marginBottom: 8,
-  },
-  detailText: {
-    fontSize: 14,
-    color: "#999",
-  },
-  selectedButton: {
-    borderColor: "#3FBCF4",
-  },
+
+  // Point annotation styles
   annotationContainer: {
     width: 12,
     height: 12,
@@ -268,5 +287,65 @@ const styles = StyleSheet.create({
     backgroundColor: "#3FBCF4",
     borderColor: "white",
     borderWidth: 2,
+  },
+
+  // Scroll/list styles
+  scrollContainer: {
+    flex: 1,
+    marginBottom: 130,
+  },
+  scrollContent: {
+    padding: 16,
+  },
+  clusterCard: {
+    backgroundColor: "#2A2A2A",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  selectedCard: {
+    backgroundColor: "#1E3A5F",
+    borderColor: "#3FBCF4",
+    borderWidth: 1,
+  },
+  pressedCard: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
+  },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 4,
+  },
+  photoCount: {
+    fontSize: 24,
+    fontWeight: "600",
+    color: "white",
+  },
+  photoText: {
+    fontSize: 16,
+    color: "#999",
+  },
+  dateText: {
+    color: "#999",
+    fontSize: 14,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 32,
+  },
+  emptyText: {
+    color: "#999",
+    fontSize: 16,
   },
 });

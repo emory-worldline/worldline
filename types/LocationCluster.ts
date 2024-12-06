@@ -92,7 +92,7 @@ export function findDenseClusters(
   locations: PhotoLocation[],
   radiusMeters: number = 200,
   minPoints: number = 5,
-  maxClusters: number = 5,
+  maxClusters: number = 10,
 ): LocationCluster[] {
   const visited = new Set<string>();
   const clusters: LocationCluster[] = [];
