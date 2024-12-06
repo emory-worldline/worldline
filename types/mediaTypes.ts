@@ -49,7 +49,7 @@ export interface PhotoLocation {
 
 export interface ProcessingStatus {
   isProcessing: boolean;
-  progress: number;
+  progress: number | String;
   error?: string;
 }
 
@@ -61,6 +61,7 @@ export const STORAGE_KEYS = {
   mediaStats: "mediaStats",
   photoLocations: "photoLocations",
   worldLineLocations: "worldLineLocations",
+  denseClusters: "denseClusters",
 };
 
 export const BATCH_SIZE = 50;

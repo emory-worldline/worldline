@@ -29,6 +29,7 @@ export default function SettingsScreen() {
       await AsyncStorage.removeItem(STORAGE_KEYS.mediaStats);
       await AsyncStorage.removeItem(STORAGE_KEYS.photoLocations);
       await AsyncStorage.removeItem(STORAGE_KEYS.worldLineLocations);
+      await AsyncStorage.removeItem(STORAGE_KEYS.denseClusters);
       console.log("Storage successfully cleared");
 
       Alert.alert("Success", "Data cleared successfully.");
