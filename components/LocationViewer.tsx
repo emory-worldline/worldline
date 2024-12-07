@@ -6,6 +6,7 @@ import Constants from "expo-constants";
 import ControlsBar from "./ControlsBar";
 import { useContext } from "react";
 import { DarkModeContext } from "@/components/context/DarkModeContext";
+import { STORAGE_KEYS } from "@/types/mediaTypes";
 
 MapboxGL.setAccessToken(Constants.expoConfig?.extra?.mapboxPublicKey || "");
 
@@ -37,10 +38,6 @@ export interface LayerVisibility {
   worldline: boolean;
 }
 
-const STORAGE_KEYS = {
-  photoLocations: "photoLocations",
-} as const;
-
 const LocationViewer: React.FC = () => {
   const [geoJSON, setGeoJSON] = useState<{
     type: "FeatureCollection";
@@ -61,8 +58,7 @@ const LocationViewer: React.FC = () => {
       },
     ],
   });
-
-  const [sortedCoordinates, setSortedCoordinates] = useState<
+  const [worldlineCoordinates, setWorldlineCoordinates] = useState<
     [number, number][]
   >([]);
 
@@ -140,11 +136,21 @@ const LocationViewer: React.FC = () => {
         const locationsString = await AsyncStorage.getItem(
           STORAGE_KEYS.photoLocations,
         );
-        if (locationsString) {
+        const worldlineString = await AsyncStorage.getItem(
+          STORAGE_KEYS.worldLineLocations,
+        );
+        if (locationsString && worldlineString) {
           const locations = JSON.parse(locationsString);
           const validLocations = locations.filter(
             (loc: any) => loc.latitude && loc.longitude,
           );
+
+          const worldlineLocations = JSON.parse(worldlineString);
+          const validWorldlineLocations = worldlineLocations.filter(
+            (loc: any) => loc.latitude && loc.longitude,
+          );
+
+          // console.log("validWorldlineLocations:", validWorldlineLocations);
 
           // Convert to GeoJSON
           const features: GeoJSONFeature[] = validLocations.map(
@@ -161,20 +167,34 @@ const LocationViewer: React.FC = () => {
             }),
           );
 
+          const worldlineFeatures: GeoJSONFeature[] =
+            validWorldlineLocations.map((loc: PhotoLocation) => ({
+              type: "Feature",
+              geometry: {
+                type: "Point",
+                coordinates: [loc.longitude, loc.latitude],
+              },
+              properties: {
+                id: loc.id,
+                timestamp: loc.timestamp,
+              },
+            }));
+
+          // console.log("worldlineFeatures:", worldlineFeatures);
+
           setGeoJSON({
             type: "FeatureCollection",
             features,
           });
 
-          const coordinates: [number, number][] = features.map(
-            (feature) => feature.geometry.coordinates,
-          );
+          const worldlineCoordinates: [number, number][] =
+            worldlineFeatures.map((feature) => feature.geometry.coordinates);
 
-          setSortedCoordinates(coordinates);
+          setWorldlineCoordinates(worldlineCoordinates);
 
-          const numPointsBetween = 100; // Adjust this to increase/decrease smoothness
+          const numPointsBetween = 75;
           const interpolatedCoords = interpolateLine(
-            coordinates,
+            worldlineCoordinates,
             numPointsBetween,
           );
 
@@ -246,12 +266,8 @@ const LocationViewer: React.FC = () => {
     } else if (distanceInKm < 0.5) {
       // Less than 500 meters
       return 12;
-    } else if (distanceInKm < 1.5) {
-      return 9;
-    } else if (distanceInKm < 5) {
-      return 3;
     } else {
-      return 2; // Default zoom level for larger distances
+      return 2;
     }
   };
 
@@ -276,16 +292,53 @@ const LocationViewer: React.FC = () => {
 
   const { isDarkMode } = useContext(DarkModeContext);
 
+  let redrawCounter = 1;
   const animateLine = (timestamp: number) => {
+    // console.log("Animation frame called");
+    // console.log(`Progress: ${timestamp - startTimeRef.current}`);
+    // console.log(`Current index: ${indexRef.current}`);
+    // console.log(`Total interpolated coords: ${interpolatedCoords.length}`);
+    // console.log("timeperPointRef.current:", timePerPointRef.current);
+
+    redrawCounter = redrawCounter + 1;
     const progress = timestamp - startTimeRef.current;
-    const pointsToAdd = Math.floor(progress / timePerPointRef.current);
+    // console.log("progress:", progress);
+    const pointsToAdd = Math.max(
+      Math.floor(progress / timePerPointRef.current),
+      indexRef.current + 1,
+    );
+
+    const newIndex = Math.min(pointsToAdd, interpolatedCoords.length - 1);
+    const newCoords = interpolatedCoords.slice(0, newIndex + 1);
+
+    const currentCoordinates = worldlineCoordinates.slice(
+      0,
+      Math.floor(
+        newIndex / (interpolatedCoords.length / worldlineCoordinates.length),
+      ) + 1,
+    );
 
     if (
       pointsToAdd > indexRef.current &&
       indexRef.current < interpolatedCoords.length
     ) {
-      const newIndex = Math.min(pointsToAdd, interpolatedCoords.length - 1);
-      const newCoords = interpolatedCoords.slice(0, newIndex + 1);
+      if (redrawCounter % 75 === 0) {
+        // console.log("redraw counter if statement entered");
+        setGeoJSONLine((prev) => ({
+          ...prev,
+          features: [
+            {
+              type: "Feature",
+              geometry: {
+                type: "LineString",
+                coordinates: currentCoordinates,
+              },
+              properties: {},
+            },
+          ],
+        }));
+        // console.log("line reset");
+      }
 
       setGeoJSONLine((prev) => ({
         ...prev,
@@ -312,7 +365,7 @@ const LocationViewer: React.FC = () => {
           targetZoomLevel = getZoomLevelForDistance(distance);
 
           // Smooth zoom interpolation
-          const zoomTransitionFactor = 0.1; // Adjust between 0 (no change) and 1 (immediate change)
+          const zoomTransitionFactor = 0.95; // Adjust between 0 (no change) and 1 (immediate change)
           const smoothZoomLevel =
             previousZoomLevelRef.current +
             (targetZoomLevel - previousZoomLevelRef.current) *
@@ -339,6 +392,11 @@ const LocationViewer: React.FC = () => {
       ) {
         animationRef.current = requestAnimationFrame(animateLine);
       }
+    } else {
+      console.log("Animation conditions not met");
+      console.log(`pointsToAdd: ${pointsToAdd}`);
+      console.log(`indexRef.current: ${indexRef.current}`);
+      console.log(`interpolatedCoords.length: ${interpolatedCoords.length}`);
     }
   };
   useEffect(() => {
@@ -349,7 +407,7 @@ const LocationViewer: React.FC = () => {
       // Start the animation
       startTimeRef.current = performance.now();
       totalPointsRef.current = interpolatedCoords.length;
-      animationDurationRef.current = 90000; // 3 minute animation duration
+      animationDurationRef.current = 180000; // 3 minute animation duration
       timePerPointRef.current =
         animationDurationRef.current / totalPointsRef.current;
 
@@ -366,6 +424,7 @@ const LocationViewer: React.FC = () => {
           },
         ],
       }));
+      // console.log("useEffect requestAnimationFrame");
       animationRef.current = requestAnimationFrame(animateLine);
 
       // Add a cleanup to set final line after animation completes
@@ -382,7 +441,7 @@ const LocationViewer: React.FC = () => {
               ...prev.features[0],
               geometry: {
                 type: "LineString",
-                coordinates: sortedCoordinates, // Use original coordinates
+                coordinates: worldlineCoordinates, // Use original coordinates
               },
             },
           ],
@@ -394,6 +453,7 @@ const LocationViewer: React.FC = () => {
         cancelAnimationFrame(animationRef.current);
       }
       // Clear the line
+      // console.log("clearing line");
       setGeoJSONLine((prev) => ({
         ...prev,
         features: [
