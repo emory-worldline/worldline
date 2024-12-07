@@ -407,7 +407,7 @@ const LocationViewer: React.FC = () => {
       // Start the animation
       startTimeRef.current = performance.now();
       totalPointsRef.current = interpolatedCoords.length;
-      animationDurationRef.current = 180000; // 3 minute animation duration
+      animationDurationRef.current = worldlineCoordinates.length * 2500; // 1000 = 1 second
       timePerPointRef.current =
         animationDurationRef.current / totalPointsRef.current;
 
