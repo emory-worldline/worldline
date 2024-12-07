@@ -4,6 +4,8 @@ import MapboxGL from "@rnmapbox/maps";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import ControlsBar from "./ControlsBar";
+import { useContext } from "react";
+import { DarkModeContext } from "@/components/context/DarkModeContext";
 
 MapboxGL.setAccessToken(Constants.expoConfig?.extra?.mapboxPublicKey || "");
 
@@ -272,6 +274,8 @@ const LocationViewer: React.FC = () => {
     ];
   };
 
+  const { isDarkMode } = useContext(DarkModeContext);
+
   const animateLine = (timestamp: number) => {
     const progress = timestamp - startTimeRef.current;
     const pointsToAdd = Math.floor(progress / timePerPointRef.current);
@@ -408,6 +412,7 @@ const LocationViewer: React.FC = () => {
     <View style={styles.container}>
       <MapboxGL.MapView
         style={styles.map}
+        styleURL={isDarkMode ? "mapbox://styles/mapbox/dark-v11" : ""}
         projection="globe"
         rotateEnabled={true}
         pitchEnabled={true}

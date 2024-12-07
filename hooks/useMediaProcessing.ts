@@ -18,6 +18,11 @@ import {
   getTimeOfDay,
 } from "../utils/mediaUtils";
 import { Alert } from "react-native";
+import {
+  calculateDistance,
+  LocationCluster,
+  findDenseClusters,
+} from "@/types/LocationCluster";
 
 const processAsset = async (
   asset: MediaLibrary.Asset,
@@ -116,27 +121,6 @@ const processAsset = async (
   }
 };
 
-const calculateDistance = (
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number,
-): number => {
-  const R = 6371e3; // Earth's radius in meters
-  const φ1 = (lat1 * Math.PI) / 180;
-  const φ2 = (lat2 * Math.PI) / 180;
-  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
-
-  const a =
-    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return R * c; // Distance in meters
-};
-
 const convertToWLPoints = (locations: PhotoLocation[]): PhotoLocation[] => {
   if (locations.length <= 1) return locations;
 
@@ -184,6 +168,57 @@ export const useMediaProcessing = () => {
     analyzeMediaLibrary();
     return true;
   }, []);
+
+  const processWorldLine = async (locationData: PhotoLocation[]) => {
+    setStatus({ isProcessing: true, progress: "Determining Worldline" });
+    try {
+      let worldLineLocations = convertToWLPoints(locationData);
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.worldLineLocations,
+        JSON.stringify(worldLineLocations),
+      );
+      console.log(`Saved ${worldLineLocations.length} WL locations`);
+    } catch (error) {
+      console.error("Error processing worldline:", error);
+    }
+  };
+
+  const processClusters = async (locationData: PhotoLocation[]) => {
+    setStatus({ isProcessing: true, progress: "Crunching Clusters" });
+    try {
+      const denseClusters = findDenseClusters(locationData);
+      console.log(
+        "Clusters found:",
+        denseClusters.map((cluster, index) => ({
+          cluster: index + 1,
+          numPhotos: cluster.size,
+          density: cluster.density.toFixed(2),
+        })),
+        "\nTotal photos in clusters:",
+        denseClusters.reduce((sum, cluster) => sum + cluster.size, 0),
+        "\nOriginal photo count:",
+        locationData.length,
+      );
+
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.denseClusters,
+        JSON.stringify(
+          denseClusters.map((cluster) => ({
+            locations: cluster.locations,
+            boundingBox: {
+              minLat: cluster.minLat,
+              maxLat: cluster.maxLat,
+              minLong: cluster.minLong,
+              maxLong: cluster.maxLong,
+            },
+          })),
+        ),
+      );
+      console.log(`Saved ${denseClusters.length} clusters`);
+    } catch (error) {
+      console.error("Error processing clusters:", error);
+    }
+  };
 
   const analyzeMediaLibrary = useCallback(async () => {
     setStatus({ isProcessing: true, progress: 0 });
@@ -244,24 +279,16 @@ export const useMediaProcessing = () => {
         endCursor = newEndCursor;
       }
 
-      let worldLineLocations = convertToWLPoints(locationData);
-
-      try {
-        await AsyncStorage.setItem(
-          STORAGE_KEYS.worldLineLocations,
-          JSON.stringify(worldLineLocations),
-        );
-        console.log(`Saved ${worldLineLocations.length} WL locations`);
-      } catch (storageError) {
-        console.error("Error saving to storage:", storageError);
-      }
-
       if (totalProcessed >= MAX_MEDIA) {
         Alert.alert(
           "Analysis Limit Reached",
           `Analyzed ${totalProcessed} media items. Some items may not be included in the stats.`,
         );
       }
+
+      await processWorldLine(locationData);
+      await processClusters(locationData);
+
       setStatus({ isProcessing: false, progress: totalProcessed });
     } catch (error) {
       console.error("Error processing media library:", error);
