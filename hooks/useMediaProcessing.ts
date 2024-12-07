@@ -3,7 +3,7 @@ import { useState, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   MediaStats,
-  initialMediaStats,
+  getInitialMediaStats,
   PhotoLocation,
   ExifInfo,
   ProcessingStatus,
@@ -18,6 +18,11 @@ import {
   getTimeOfDay,
 } from "../utils/mediaUtils";
 import { Alert } from "react-native";
+import {
+  calculateDistance,
+  LocationCluster,
+  findDenseClusters,
+} from "@/types/LocationCluster";
 
 const processAsset = async (
   asset: MediaLibrary.Asset,
@@ -116,6 +121,31 @@ const processAsset = async (
   }
 };
 
+const convertToWLPoints = (locations: PhotoLocation[]): PhotoLocation[] => {
+  if (locations.length <= 1) return locations;
+
+  const result: PhotoLocation[] = [locations[0]]; // Always keep first point
+  const DISTANCE_THRESHOLD = 20; // 20 meters
+
+  for (let i = 1; i < locations.length; i++) {
+    const current = locations[i];
+    const prev = result[result.length - 1];
+
+    const distance = calculateDistance(
+      prev.latitude,
+      prev.longitude,
+      current.latitude,
+      current.longitude,
+    );
+
+    if (distance >= DISTANCE_THRESHOLD) {
+      result.push(current);
+    }
+  }
+
+  return result;
+};
+
 export const useMediaProcessing = () => {
   const [status, setStatus] = useState<ProcessingStatus>({
     isProcessing: false,
@@ -139,11 +169,62 @@ export const useMediaProcessing = () => {
     return true;
   }, []);
 
+  const processWorldLine = async (locationData: PhotoLocation[]) => {
+    setStatus({ isProcessing: true, progress: "Determining Worldline" });
+    try {
+      let worldLineLocations = convertToWLPoints(locationData);
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.worldLineLocations,
+        JSON.stringify(worldLineLocations),
+      );
+      console.log(`Saved ${worldLineLocations.length} WL locations`);
+    } catch (error) {
+      console.error("Error processing worldline:", error);
+    }
+  };
+
+  const processClusters = async (locationData: PhotoLocation[]) => {
+    setStatus({ isProcessing: true, progress: "Crunching Clusters" });
+    try {
+      const denseClusters = findDenseClusters(locationData);
+      console.log(
+        "Clusters found:",
+        denseClusters.map((cluster, index) => ({
+          cluster: index + 1,
+          numPhotos: cluster.size,
+          density: cluster.density.toFixed(2),
+        })),
+        "\nTotal photos in clusters:",
+        denseClusters.reduce((sum, cluster) => sum + cluster.size, 0),
+        "\nOriginal photo count:",
+        locationData.length,
+      );
+
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.denseClusters,
+        JSON.stringify(
+          denseClusters.map((cluster) => ({
+            locations: cluster.locations,
+            boundingBox: {
+              minLat: cluster.minLat,
+              maxLat: cluster.maxLat,
+              minLong: cluster.minLong,
+              maxLong: cluster.maxLong,
+            },
+          })),
+        ),
+      );
+      console.log(`Saved ${denseClusters.length} clusters`);
+    } catch (error) {
+      console.error("Error processing clusters:", error);
+    }
+  };
+
   const analyzeMediaLibrary = useCallback(async () => {
     setStatus({ isProcessing: true, progress: 0 });
 
     try {
-      let mediaStats = initialMediaStats;
+      let mediaStats = getInitialMediaStats();
       let locationData: PhotoLocation[] = [];
       let hasNextPage = true;
       let endCursor: string | undefined;
@@ -177,6 +258,9 @@ export const useMediaProcessing = () => {
           progress: totalProcessed,
         }));
 
+        // sort by timestamp
+        locationData.sort((a, b) => a.timestamp - b.timestamp);
+
         try {
           await AsyncStorage.setItem(
             STORAGE_KEYS.mediaStats,
@@ -194,12 +278,17 @@ export const useMediaProcessing = () => {
         hasNextPage = newHasNextPage;
         endCursor = newEndCursor;
       }
+
       if (totalProcessed >= MAX_MEDIA) {
         Alert.alert(
           "Analysis Limit Reached",
           `Analyzed ${totalProcessed} media items. Some items may not be included in the stats.`,
         );
       }
+
+      await processWorldLine(locationData);
+      await processClusters(locationData);
+
       setStatus({ isProcessing: false, progress: totalProcessed });
     } catch (error) {
       console.error("Error processing media library:", error);

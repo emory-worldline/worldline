@@ -48,8 +48,16 @@ export default function Index() {
 
         <GradientButton text="Get Started" onPress={handleStart} style={styles} />
 
+      <View
+        style={{
+          position: "absolute",
+          bottom: 95,
+        }}
+      >
         <PrivacyPolicyButton />
       </View>
+    </View>
+        <PrivacyPolicyButton />
     </LinearGradient>
   );
 }

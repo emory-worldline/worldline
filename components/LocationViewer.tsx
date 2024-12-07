@@ -1,19 +1,13 @@
 import React, { useEffect, useState, useRef } from "react";
-import {
-  View,
-  Text,
-  Switch,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  Animated,
-} from "react-native";
+import { View, StyleSheet, Animated } from "react-native";
 import MapboxGL from "@rnmapbox/maps";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import { useIsFocused } from "@react-navigation/native";
 import { PhotoLocation, STORAGE_KEYS } from "@/types/mediaTypes";
 import ControlsBar from "./ControlsBar";
+import { useContext } from "react";
+import { DarkModeContext } from "@/components/context/DarkModeContext";
 
 MapboxGL.setAccessToken(Constants.expoConfig?.extra?.mapboxPublicKey || "");
 
@@ -108,6 +102,8 @@ const LocationViewer: React.FC = () => {
           );
           setCenter([sum.lng / features.length, sum.lat / features.length]);
         }
+      } else {
+        setGeoJSON({ type: "FeatureCollection", features: [] });
       }
     } catch (error) {
       console.error("Error loading locations:", error);
@@ -139,10 +135,13 @@ const LocationViewer: React.FC = () => {
     ];
   };
 
+  const { isDarkMode } = useContext(DarkModeContext);
+
   return (
     <View style={styles.container}>
       <MapboxGL.MapView
         style={styles.map}
+        styleURL={isDarkMode ? "mapbox://styles/mapbox/dark-v11" : ""}
         projection="globe"
         rotateEnabled={true}
         pitchEnabled={true}
