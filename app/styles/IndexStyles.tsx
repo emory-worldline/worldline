@@ -1,4 +1,16 @@
 import { StyleSheet } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+
+export const GradientBackground = (props: any) => (
+  <LinearGradient
+    colors={["#2B2672", "#212121"]}
+    start={{ x: 0.5, y: 0 }}
+    end={{ x: 0.5, y: 1 }}
+    locations={[0, 0.55]}
+    style={styles.gradientBackground}
+    {...props}
+  />
+);
 
 export const styles = StyleSheet.create({
   container: {
