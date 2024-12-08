@@ -125,7 +125,7 @@ const convertToWLPoints = (locations: PhotoLocation[]): PhotoLocation[] => {
   if (locations.length <= 1) return locations;
 
   const result: PhotoLocation[] = [locations[0]]; // Always keep first point
-  const DISTANCE_THRESHOLD = 20; // 20 meters
+  const DISTANCE_THRESHOLD = 30; // 30 meters
 
   for (let i = 1; i < locations.length; i++) {
     const current = locations[i];
