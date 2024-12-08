@@ -54,6 +54,7 @@ export default function StatsScreen() {
               textAlign: "center",
               justifyContent: "center",
               padding: 8,
+              marginTop: 20,
             },
           }}
         />
