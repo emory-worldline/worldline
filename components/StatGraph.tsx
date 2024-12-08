@@ -1,7 +1,7 @@
 import { LineChart } from "react-native-gifted-charts";
 import { MediaStats } from "@/types/mediaTypes";
 import { View } from "react-native";
-import Colors from '@/constants/Colors'
+import Colors from "@/constants/Colors";
 
 interface StatGraphProps {
   yearStats: MediaStats["creationYears"];

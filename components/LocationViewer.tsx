@@ -7,6 +7,7 @@ import ControlsBar from "./ControlsBar";
 import { useContext } from "react";
 import { STORAGE_KEYS } from "@/types/mediaTypes";
 import { MapThemeContext } from "@/components/context/MapThemeContext";
+import Colors from "@/constants/Colors";
 
 MapboxGL.setAccessToken(Constants.expoConfig?.extra?.mapboxPublicKey || "");
 
@@ -284,9 +285,9 @@ const LocationViewer: React.FC = () => {
       ["linear"],
       ["get", "timestamp"],
       Math.min(...geoJSON.features.map((f) => f.properties.timestamp)),
-      "#0000ff",
+      Colors.TERTIARY_BLUE,
       Math.max(...geoJSON.features.map((f) => f.properties.timestamp)),
-      "#ff0000",
+      Colors.PRIMARY_GREEN,
     ];
   };
 
@@ -535,9 +536,9 @@ const LocationViewer: React.FC = () => {
               id="photoPoints"
               style={{
                 circleRadius: 8,
-                circleColor: "red",
+                circleColor: Colors.PRIMARY_BLUE,
                 circleStrokeWidth: 2,
-                circleStrokeColor: "white",
+                circleStrokeColor: Colors.WHITE,
               }}
             />
           </MapboxGL.ShapeSource>
@@ -603,11 +604,11 @@ const LocationViewer: React.FC = () => {
                 circleColor: [
                   "step",
                   ["get", "point_count"],
-                  "#51bbd6", // Color for clusters with count < 100
+                  Colors.PRIMARY_PURPLE, // Color for clusters with count < 100
                   100,
-                  "#f1f075", // Color for clusters with count >= 100 and < 750
+                  Colors.GOLD, // Color for clusters with count >= 100 and < 750
                   750,
-                  "#f28cb1", // Color for clusters with count >= 750
+                  Colors.SECONDARY_BLUE, // Color for clusters with count >= 750
                 ],
                 circleRadius: [
                   "step",
@@ -657,7 +658,7 @@ const LocationViewer: React.FC = () => {
             <MapboxGL.LineLayer
               id="line-layer"
               style={{
-                lineColor: "#ed6498",
+                lineColor: Colors.PRIMARY_PURPLE,
                 lineWidth: 4,
                 lineOpacity: 0.7,
                 lineCap: "round",
