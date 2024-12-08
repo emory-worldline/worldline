@@ -1,10 +1,10 @@
 import { Tabs } from "expo-router";
 import { TabBar } from "@/components/TabBar";
-import { DarkModeProvider } from "@/components/context/DarkModeContext";
+import { MapThemeProvider } from "@/components/context/MapThemeContext";
 
 export default function TabsLayout() {
   return (
-    <DarkModeProvider>
+    <MapThemeProvider>
       <Tabs
         tabBar={(props) => <TabBar {...props} />}
         screenOptions={{ headerShown: false }}
@@ -34,6 +34,6 @@ export default function TabsLayout() {
           }}
         />
       </Tabs>
-    </DarkModeProvider>
+    </MapThemeProvider>
   );
 }
