@@ -124,7 +124,7 @@ const LocationViewer: React.FC = () => {
     setIsControlsVisible((prev) => !prev);
     Animated.timing(animation, {
       toValue: isControlsVisible ? 70 : 410, // target height (collapsed: first value, expanded: second value)
-      duration: 300, // animation duration in ms
+      duration: 400, // animation duration in ms
       useNativeDriver: false,
     }).start();
   };
