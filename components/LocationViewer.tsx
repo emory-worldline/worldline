@@ -119,7 +119,7 @@ const LocationViewer: React.FC = () => {
     return interpolatedCoordinates;
   };
 
-  const animation = useRef(new Animated.Value(125)).current;
+  const animation = useRef(new Animated.Value(70)).current;
   const toggleControls = () => {
     setIsControlsVisible((prev) => !prev);
     Animated.timing(animation, {
