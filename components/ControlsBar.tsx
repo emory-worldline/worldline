@@ -1,7 +1,10 @@
-import React from "react";
-import { View, TouchableOpacity, Animated, StyleSheet } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, TouchableOpacity, Animated, StyleSheet, Dimensions } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { LayerVisibility } from "./LocationViewer";
+import * as ScreenOrientation from "expo-screen-orientation";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Colors from "@/constants/Colors";
 
 interface ControlsBarProps {
   layerVisibility: LayerVisibility;
@@ -18,11 +21,59 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
   toggleControls,
   animation,
 }) => {
+  const insets = useSafeAreaInsets();
+  const [orientation, setOrientation] =
+    useState<ScreenOrientation.Orientation | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const currentOrientation = await ScreenOrientation.getOrientationAsync();
+      setOrientation(currentOrientation);
+    })();
+
+    const subscription = ScreenOrientation.addOrientationChangeListener(
+      (event) => {
+        setOrientation(event.orientationInfo.orientation);
+      }
+    );
+
+    return () => {
+      ScreenOrientation.removeOrientationChangeListener(subscription);
+    };
+  }, []);
+
+  const isLandscape =
+    orientation === ScreenOrientation.Orientation.LANDSCAPE_LEFT ||
+    orientation === ScreenOrientation.Orientation.LANDSCAPE_RIGHT;
+
+  const margin = 20;
   return (
-    <Animated.View style={[styles.controlsBar, { height: animation }]}>
+    <Animated.View
+      style={[
+        styles.controlsBar,
+        isLandscape
+          ? {
+            top: insets.top + 20,
+            right: insets.right + 15,
+            flexDirection: "row-reverse",
+            height: 70,
+            width: animation,
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingVertical: 6,
+            }
+          : {
+              top: insets.top + 70,
+              right: insets.right + 15,
+              flexDirection: "column",
+              height: animation,
+              width: 70,
+            },
+      ]}
+    >
       <TouchableOpacity style={styles.controlsToggle} onPress={toggleControls}>
         <MaterialIcons
-          name={isControlsVisible ? "keyboard-arrow-up" : "layers"}
+          name={isControlsVisible ? (isLandscape ? "keyboard-arrow-left" : "keyboard-arrow-up") : "layers"}
           size={30}
           color="#FFF"
         />
@@ -41,35 +92,35 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
               <FontAwesome
                 name="map-pin"
                 size={30}
-                color={isVisible ? "#FFD700" : "#FFF"}
+                color={isVisible ? Colors.GOLD : "#FFF"}
               />
             )}
             {layer === "heatmap" && (
               <FontAwesome
                 name="dot-circle-o"
                 size={30}
-                color={isVisible ? "#FFD700" : "#FFF"}
+                color={isVisible ? Colors.GOLD : "#FFF"}
               />
             )}
             {layer === "clusters" && (
               <MaterialIcons
                 name="group-work"
                 size={30}
-                color={isVisible ? "#FFD700" : "#FFF"}
+                color={isVisible ? Colors.GOLD : "#FFF"}
               />
             )}
             {layer === "timeline" && (
               <FontAwesome
                 name="clock-o"
                 size={30}
-                color={isVisible ? "#FFD700" : "#FFF"}
+                color={isVisible ? Colors.GOLD : "#FFF"}
               />
             )}
             {layer === "buildings" && (
               <FontAwesome
                 name="building"
                 size={30}
-                color={isVisible ? "#FFD700" : "#FFF"}
+                color={isVisible ? Colors.GOLD : "#FFF"}
               />
             )}
             {layer === "worldline" && (
@@ -88,29 +139,28 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
 const styles = StyleSheet.create({
   controlsBar: {
     position: "absolute",
-    right: 20,
-    top: 140,
-    width: 70,
     backgroundColor: "rgba(62, 75, 90, 1.0)",
     borderRadius: 40,
     zIndex: 2,
-    alignItems: "center",
     overflow: "hidden",
     paddingVertical: 10,
+    paddingHorizontal: 10,
   },
   controlsToggle: {
     alignItems: "center",
     justifyContent: "center",
-    width: "100%",
-    paddingVertical: 10,
+    padding: 10,
   },
   controlsButton: {
-    marginVertical: 6,
+    marginVertical: 4,
     alignItems: "center",
-    paddingVertical: 7,
+    justifyContent: "center",
     borderRadius: 10,
-    width: "100%",
     backgroundColor: "transparent",
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+    //minWidth: 40,
+    //minHeight: 40,
   },
 });
 

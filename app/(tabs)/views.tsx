@@ -5,6 +5,7 @@ import MapboxGL from "@rnmapbox/maps";
 import { STORAGE_KEYS } from "@/types/mediaTypes";
 import type { PhotoLocation } from "@/types/mediaTypes";
 import { useIsFocused } from "@react-navigation/native";
+import Colors from "@/constants/Colors";
 
 interface GeoJSONFeature {
   type: "Feature";
@@ -204,7 +205,7 @@ export default function ClusterViewScreen() {
                 id="pointLayer"
                 style={{
                   circleRadius: 6,
-                  circleColor: "#3FBCF4",
+                  circleColor: Colors.PRIMARY_BLUE,
                   circleStrokeWidth: 2,
                   circleStrokeColor: "white",
                 }}

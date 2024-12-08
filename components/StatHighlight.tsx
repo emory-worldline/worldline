@@ -1,4 +1,6 @@
 import { View, Text, StyleSheet } from "react-native";
+import Colors from '@/constants/Colors'
+import { LinearGradient } from "expo-linear-gradient";
 
 const StatHighlight = ({
   title,
@@ -10,13 +12,18 @@ const StatHighlight = ({
   icon: string;
 }) => {
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      style={styles.container}
+      colors={[Colors.SECONDARY_PURPLE, Colors.PRIMARY_BLUE]} // choose desired gradient colors
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+    >
       <Text style={styles.title}>{title}</Text>
       <Text style={{ fontSize: 30, padding: 8 }}>{icon}</Text>
       <Text style={styles.value} numberOfLines={1}>
         {value}
       </Text>
-    </View>
+    </LinearGradient>
   );
 };
 
@@ -25,7 +32,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     borderRadius: 8,
-    backgroundColor: "rgba(109,53,183,1)",
+    backgroundColor: Colors.SECONDARY_PURPLE,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
@@ -37,13 +44,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 14,
     fontWeight: "bold",
-    color: "#FFF",
+    color: Colors.WHITE,
     textAlign: "center",
   },
   value: {
     fontSize: 20,
     fontWeight: "600",
-    color: "rgba(53,203,169,1)",
+    color: Colors.WHITE,
   },
 });
 

@@ -6,13 +6,13 @@ export default {
     slug: "worldline",
     version: "1.0.0",
     orientation: "default",
-    icon: "./assets/images/worldline_logo.png",
+    icon: "./assets/images/worldline-detailed-icon.png",
     scheme: "myapp",
     userInterfaceStyle: "automatic",
     splash: {
-      image: "./assets/images/splash.png",
-      resizeMode: "contain",
-      backgroundColor: "#ffffff",
+      image: "./assets/images/worldline_splash.png",
+      resizeMode: "cover",
+      backgroundColor: "#212121",
     },
     ios: {
       supportsTablet: true,
@@ -21,7 +21,7 @@ export default {
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
-        backgroundColor: "#ffffff",
+        backgroundColor: "#212121",
       },
       package: process.env.IDENTIFIER,
     },

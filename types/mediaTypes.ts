@@ -65,4 +65,4 @@ export const STORAGE_KEYS = {
 };
 
 export const BATCH_SIZE = 50;
-export const MAX_MEDIA = 5000;
+export const MAX_MEDIA = 20000;
