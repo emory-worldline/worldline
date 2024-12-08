@@ -26,10 +26,10 @@ export const styles = StyleSheet.create({
     top: -100,
     width: 500,
     height: 620,
-    shadowColor: "black",
-    shadowOffset: { width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 10
+    // shadowColor: "black",
+    // shadowOffset: { width: 0, height: 2},
+    // shadowOpacity: 0.2,
+    // shadowRadius: 10
   },
   // Gradient text styling
   textGradient: {

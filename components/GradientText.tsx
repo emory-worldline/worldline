@@ -2,6 +2,7 @@ import React from "react";
 import { Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import MaskedView from "@react-native-masked-view/masked-view";
+import Colors from '@/constants/Colors'
 
 type GradientTextProps = {
   text: string;
@@ -21,7 +22,7 @@ export default function GradientText(props: GradientTextProps) {
       }
     >
       <LinearGradient
-        colors={["rgba(53,85,165,1)", "rgba(6,214,160,1)"]}
+        colors={[Colors.SECONDARY_BLUE, Colors.PRIMARY_GREEN]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
       >

@@ -2,6 +2,7 @@ import React from "react";
 import { View, TouchableOpacity, Animated, StyleSheet } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { LayerVisibility } from "./LocationViewer";
+import Colors from '@/constants/Colors'
 
 interface ControlsBarProps {
   layerVisibility: LayerVisibility;
@@ -41,35 +42,35 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
               <FontAwesome
                 name="map-pin"
                 size={30}
-                color={isVisible ? "#FFD700" : "#FFF"}
+                color={isVisible ? Colors.GOLD : "#FFF"}
               />
             )}
             {layer === "heatmap" && (
               <FontAwesome
                 name="dot-circle-o"
                 size={30}
-                color={isVisible ? "#FFD700" : "#FFF"}
+                color={isVisible ? Colors.GOLD : "#FFF"}
               />
             )}
             {layer === "clusters" && (
               <MaterialIcons
                 name="group-work"
                 size={30}
-                color={isVisible ? "#FFD700" : "#FFF"}
+                color={isVisible ? Colors.GOLD : "#FFF"}
               />
             )}
             {layer === "timeline" && (
               <FontAwesome
                 name="clock-o"
                 size={30}
-                color={isVisible ? "#FFD700" : "#FFF"}
+                color={isVisible ? Colors.GOLD : "#FFF"}
               />
             )}
             {layer === "buildings" && (
               <FontAwesome
                 name="building"
                 size={30}
-                color={isVisible ? "#FFD700" : "#FFF"}
+                color={isVisible ? Colors.GOLD : "#FFF"}
               />
             )}
             {layer === "worldline" && (

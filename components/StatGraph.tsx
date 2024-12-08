@@ -1,6 +1,7 @@
 import { LineChart } from "react-native-gifted-charts";
 import { MediaStats } from "@/types/mediaTypes";
 import { View } from "react-native";
+import Colors from '@/constants/Colors'
 
 interface StatGraphProps {
   yearStats: MediaStats["creationYears"];
@@ -32,23 +33,23 @@ function StatGraph({ yearStats }: StatGraphProps) {
         textShiftY={-10}
         textColor="white"
         noOfSections={3}
-        yAxisColor="rgba(53,203,169,1)"
+        yAxisColor={Colors.PRIMARY_BLUE}
         showVerticalLines
-        verticalLinesColor="rgba(53,203,169,1)"
-        xAxisColor="rgba(53,203,169,1)"
+        verticalLinesColor={Colors.PRIMARY_BLUE}
+        xAxisColor={Colors.PRIMARY_BLUE}
         lineGradient
-        lineGradientStartColor="rgba(53,203,169,1)"
-        lineGradientEndColor="rgba(109,53,183,1)"
+        lineGradientStartColor={Colors.PRIMARY_GREEN}
+        lineGradientEndColor={Colors.PRIMARY_BLUE}
         dataPointsColor="white"
         thickness={5}
         xAxisLabelTextStyle={{
-          color: "rgba(53,203,169,1)",
+          color: Colors.PRIMARY_BLUE,
           textAlign: "center",
           fontWeight: "bold",
         }}
         yAxisTextStyle={{ color: "rgba(53,203,169,1)", textAlign: "center" }}
-        startFillColor="rgba(53,203,169,1)"
-        endFillColor="rgba(109,53,183,1)"
+        startFillColor={Colors.PRIMARY_GREEN}
+        endFillColor={Colors.SECONDARY_BLUE}
         endOpacity={0.5}
       />
     </View>

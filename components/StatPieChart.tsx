@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { PieChart } from "react-native-gifted-charts";
 import { View, Text } from "react-native";
+import Colors from '@/constants/Colors'
 
 interface StatPieChartProps {
   data: Record<string, number>;
@@ -17,8 +18,8 @@ const StatPieChart = ({ data, title = "Distribution" }: StatPieChartProps) => {
   const total = processedEntries.reduce((sum, [, value]) => sum + value, 0);
 
   // Base gradient colors
-  const startColor = { r: 109, g: 53, b: 183 }; // #6D35B7
-  const endColor = { r: 53, g: 203, b: 169 }; // #35CBA9
+  const startColor = { r: 6, g: 214, b: 160 }; // Colors.PRIMARY_GREEN
+  const endColor = { r: 55, g: 132, b: 203 }; // Colors.SECONDARY_BLUE
 
   // interpolate between colors
   const interpolateColor = (
