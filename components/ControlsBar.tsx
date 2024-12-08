@@ -65,6 +65,20 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
                 color={isVisible ? "#FFD700" : "#FFF"}
               />
             )}
+            {layer === "buildings" && (
+              <FontAwesome
+                name="building"
+                size={30}
+                color={isVisible ? "#FFD700" : "#FFF"}
+              />
+            )}
+            {layer === "worldline" && (
+              <FontAwesome
+                name="search"
+                size={30}
+                color={isVisible ? "#FFD700" : "#FFF"}
+              />
+            )}
           </TouchableOpacity>
         ))}
     </Animated.View>
