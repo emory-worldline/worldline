@@ -5,13 +5,12 @@ import { useMediaProcessing } from "@/hooks/useMediaProcessing";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEYS } from "@/types/mediaTypes";
 import Constants from "expo-constants";
-import { DarkModeContext } from "@/components/context/DarkModeContext";
 import { useContext } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PrivacyPolicyButton from "@/components/PrivacyPolicyButton";
+import { MapThemeContext } from "@/components/context/MapThemeContext";
 
 export default function SettingsScreen() {
-  const { isDarkMode, toggleDarkMode } = useContext(DarkModeContext);
   const { status, startProcessing } = useMediaProcessing();
 
   const reProcess = async () => {
@@ -39,6 +38,13 @@ export default function SettingsScreen() {
     }
   };
 
+  const { mapTheme, setMapTheme } = useContext(MapThemeContext);
+  const themes = [
+    { display: "Standard", value: "standard" },
+    { display: "Dark", value: "dark" },
+    { display: "Satellite", value: "satellite" },
+  ];
+
   return (
     <SafeAreaView
       style={{
@@ -57,25 +63,34 @@ export default function SettingsScreen() {
             textAlign: "center",
             justifyContent: "center",
             padding: 8,
+            marginTop: 20,
           },
         }}
       />
-      <View style={styles.settingContainer}>
-        <Text style={styles.settingText}>Dark Mode</Text>
-        <Switch value={isDarkMode} onValueChange={toggleDarkMode} />
-      </View>
       <View style={styles.mapThemeContainer}>
         <Text style={styles.settingText}>Map Themes</Text>
         <View style={styles.mapThemeOptionContainer}>
-          <View style={[styles.mapThemeOption, { borderColor: "#3FBCF4" }]}>
-            <Text style={styles.settingText}>Standard</Text>
-          </View>
-          <View style={styles.mapThemeOption}>
-            <Text style={styles.settingText}>Street</Text>
-          </View>
-          <View style={styles.mapThemeOption}>
-            <Text style={styles.settingText}>Satellite</Text>
-          </View>
+          {themes.map(({ display, value }) => (
+            <Pressable
+              key={value}
+              onPress={() =>
+                setMapTheme(value as "standard" | "dark" | "satellite")
+              }
+              style={[
+                styles.mapThemeOption,
+                { borderColor: mapTheme === value ? "#3FBCF4" : "grey" },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.settingText,
+                  { fontWeight: mapTheme === value ? "bold" : "normal" },
+                ]}
+              >
+                {display}
+              </Text>
+            </Pressable>
+          ))}
         </View>
       </View>
       <Pressable
@@ -149,8 +164,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     marginVertical: 10,
     backgroundColor: "#3E4B5A",
-    // borderWidth: 1,
-    // borderColor: "#91A0B1",
+    marginTop: 40,
     borderRadius: 10,
     width: "100%",
   },

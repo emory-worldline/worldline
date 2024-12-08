@@ -7,7 +7,7 @@ import { useIsFocused } from "@react-navigation/native";
 import { PhotoLocation, STORAGE_KEYS } from "@/types/mediaTypes";
 import ControlsBar from "./ControlsBar";
 import { useContext } from "react";
-import { DarkModeContext } from "@/components/context/DarkModeContext";
+import { MapThemeContext } from "@/components/context/MapThemeContext";
 
 MapboxGL.setAccessToken(Constants.expoConfig?.extra?.mapboxPublicKey || "");
 
@@ -135,13 +135,21 @@ const LocationViewer: React.FC = () => {
     ];
   };
 
-  const { isDarkMode } = useContext(DarkModeContext);
+  const { mapTheme } = useContext(MapThemeContext);
+
+  const mapStyles = {
+    standard: "mapbox://styles/mapbox/streets-v11",
+    dark: "mapbox://styles/mapbox/dark-v11",
+    satellite: "mapbox://styles/mapbox/satellite-streets-v12",
+  };
+
+  let styleURL = mapStyles[mapTheme] || mapStyles.standard;
 
   return (
     <View style={styles.container}>
       <MapboxGL.MapView
         style={styles.map}
-        styleURL={isDarkMode ? "mapbox://styles/mapbox/dark-v11" : ""}
+        styleURL={styleURL}
         projection="globe"
         rotateEnabled={true}
         pitchEnabled={true}
