@@ -3,32 +3,33 @@ import { GradientBackground, styles } from "./styles/IndexStyles";
 import { LinearGradient } from "expo-linear-gradient";
 import GradientText from "@/components/GradientText";
 import GradientButton from "@/components/GradientButton";
-import PrivacyPolicyButton from "@/components/PrivacyPolicyButton";
-import { useMediaProcessing } from "@/hooks/useMediaProcessing";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { STORAGE_KEYS } from "@/types/mediaTypes";
+import PrivacyPolicyButton from "@/components/PrivacyPolicyButton";
+// import { useMediaProcessing } from "@/hooks/useMediaProcessing";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+// import { STORAGE_KEYS } from "@/types/mediaTypes";
 
 const Globe = require("../assets/images/animated_globe.gif");
 
 export default function Index() {
-  const { status, startProcessing } = useMediaProcessing();
+  // const { status, startProcessing } = useMediaProcessing();
   const router = useRouter();
 
   const handleStart = async () => {
-    const storedStats = await AsyncStorage.getItem(STORAGE_KEYS.mediaStats);
-    if (storedStats) {
-      router.push("/(tabs)");
-    } else {
-      const permissionGranted = await startProcessing();
-      if (!permissionGranted) {
-        Alert.alert(
-          "Please grant media library permissions to analyze your photos",
-        );
-        return;
-      }
-      router.push("/(tabs)");
-    }
+    router.push("/(tabs)");
+    // const storedStats = await AsyncStorage.getItem(STORAGE_KEYS.mediaStats);
+    // if (storedStats) {
+    //   router.push("/(tabs)");
+    // } else {
+    //   const permissionGranted = await startProcessing();
+    //   if (!permissionGranted) {
+    //     Alert.alert(
+    //       "Please grant media library permissions to analyze your photos",
+    //     );
+    //     return;
+    //   }
+    //   router.push("/(tabs)");
+    // }
   };
 
   return (
@@ -40,17 +41,21 @@ export default function Index() {
 
         <GradientText text="worldline" style={styles} />
 
-        <GradientButton text="Get Started" onPress={handleStart} style={styles} />
+        <GradientButton
+          text="Get Started"
+          onPress={handleStart}
+          style={styles}
+        />
 
-      <View
-        style={{
-          position: "absolute",
-          bottom: 95,
-        }}
-      >
-        <PrivacyPolicyButton />
+        <View
+          style={{
+            position: "absolute",
+            bottom: 95,
+          }}
+        >
+          <PrivacyPolicyButton />
+        </View>
       </View>
-    </View>
     </GradientBackground>
   );
 }

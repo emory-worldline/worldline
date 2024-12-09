@@ -8,6 +8,7 @@ import { useContext } from "react";
 import { STORAGE_KEYS } from "@/types/mediaTypes";
 import { MapThemeContext } from "@/components/context/MapThemeContext";
 import Colors from "@/constants/Colors";
+import { useIsFocused } from "@react-navigation/native";
 
 MapboxGL.setAccessToken(Constants.expoConfig?.extra?.mapboxPublicKey || "");
 
@@ -66,6 +67,8 @@ const LocationViewer: React.FC = () => {
   const [interpolatedCoords, setInterpolatedCoords] = useState<
     [number, number][]
   >([]);
+
+  const isFocused = useIsFocused();
 
   // Camera States
   const [isCameraInitialized, setIsCameraInitialized] = useState(false);
@@ -130,94 +133,99 @@ const LocationViewer: React.FC = () => {
     }).start();
   };
 
+  const loadLocations = async () => {
+    try {
+      const locationsString = await AsyncStorage.getItem(
+        STORAGE_KEYS.photoLocations,
+      );
+      const worldlineString = await AsyncStorage.getItem(
+        STORAGE_KEYS.worldLineLocations,
+      );
+      if (locationsString && worldlineString) {
+        const locations = JSON.parse(locationsString);
+        const validLocations = locations.filter(
+          (loc: any) => loc.latitude && loc.longitude,
+        );
+
+        const worldlineLocations = JSON.parse(worldlineString);
+        const validWorldlineLocations = worldlineLocations.filter(
+          (loc: any) => loc.latitude && loc.longitude,
+        );
+
+        // console.log("validWorldlineLocations:", validWorldlineLocations);
+
+        // Convert to GeoJSON
+        const features: GeoJSONFeature[] = validLocations.map(
+          (loc: PhotoLocation) => ({
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: [loc.longitude, loc.latitude],
+            },
+            properties: {
+              id: loc.id,
+              timestamp: loc.timestamp,
+            },
+          }),
+        );
+
+        const worldlineFeatures: GeoJSONFeature[] = validWorldlineLocations.map(
+          (loc: PhotoLocation) => ({
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: [loc.longitude, loc.latitude],
+            },
+            properties: {
+              id: loc.id,
+              timestamp: loc.timestamp,
+            },
+          }),
+        );
+
+        // console.log("worldlineFeatures:", worldlineFeatures);
+
+        setGeoJSON({
+          type: "FeatureCollection",
+          features,
+        });
+
+        const worldlineCoordinates: [number, number][] = worldlineFeatures.map(
+          (feature) => feature.geometry.coordinates,
+        );
+
+        setWorldlineCoordinates(worldlineCoordinates);
+
+        const numPointsBetween = 75;
+        const interpolatedCoords = interpolateLine(
+          worldlineCoordinates,
+          numPointsBetween,
+        );
+
+        setInterpolatedCoords(interpolatedCoords);
+
+        if (features.length > 0) {
+          const sum = features.reduce(
+            (acc, feature) => ({
+              lng: acc.lng + feature.geometry.coordinates[0],
+              lat: acc.lat + feature.geometry.coordinates[1],
+            }),
+            { lng: 0, lat: 0 },
+          );
+          setCenter([sum.lng / features.length, sum.lat / features.length]);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading locations:", error);
+    }
+  };
+
   // Load locations from storage
   useEffect(() => {
-    const loadLocations = async () => {
-      try {
-        const locationsString = await AsyncStorage.getItem(
-          STORAGE_KEYS.photoLocations,
-        );
-        const worldlineString = await AsyncStorage.getItem(
-          STORAGE_KEYS.worldLineLocations,
-        );
-        if (locationsString && worldlineString) {
-          const locations = JSON.parse(locationsString);
-          const validLocations = locations.filter(
-            (loc: any) => loc.latitude && loc.longitude,
-          );
-
-          const worldlineLocations = JSON.parse(worldlineString);
-          const validWorldlineLocations = worldlineLocations.filter(
-            (loc: any) => loc.latitude && loc.longitude,
-          );
-
-          // console.log("validWorldlineLocations:", validWorldlineLocations);
-
-          // Convert to GeoJSON
-          const features: GeoJSONFeature[] = validLocations.map(
-            (loc: PhotoLocation) => ({
-              type: "Feature",
-              geometry: {
-                type: "Point",
-                coordinates: [loc.longitude, loc.latitude],
-              },
-              properties: {
-                id: loc.id,
-                timestamp: loc.timestamp,
-              },
-            }),
-          );
-
-          const worldlineFeatures: GeoJSONFeature[] =
-            validWorldlineLocations.map((loc: PhotoLocation) => ({
-              type: "Feature",
-              geometry: {
-                type: "Point",
-                coordinates: [loc.longitude, loc.latitude],
-              },
-              properties: {
-                id: loc.id,
-                timestamp: loc.timestamp,
-              },
-            }));
-
-          // console.log("worldlineFeatures:", worldlineFeatures);
-
-          setGeoJSON({
-            type: "FeatureCollection",
-            features,
-          });
-
-          const worldlineCoordinates: [number, number][] =
-            worldlineFeatures.map((feature) => feature.geometry.coordinates);
-
-          setWorldlineCoordinates(worldlineCoordinates);
-
-          const numPointsBetween = 75;
-          const interpolatedCoords = interpolateLine(
-            worldlineCoordinates,
-            numPointsBetween,
-          );
-
-          setInterpolatedCoords(interpolatedCoords);
-
-          if (features.length > 0) {
-            const sum = features.reduce(
-              (acc, feature) => ({
-                lng: acc.lng + feature.geometry.coordinates[0],
-                lat: acc.lat + feature.geometry.coordinates[1],
-              }),
-              { lng: 0, lat: 0 },
-            );
-            setCenter([sum.lng / features.length, sum.lat / features.length]);
-          }
-        }
-      } catch (error) {
-        console.error("Error loading locations:", error);
-      }
-    };
-    loadLocations();
-  }, []);
+    if (isFocused) {
+      loadLocations();
+    }
+  }, [isFocused]);
 
   // Initialize camera position
   useEffect(() => {
