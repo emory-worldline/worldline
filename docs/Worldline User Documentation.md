@@ -65,7 +65,7 @@ Below is a collection of screenshots which depict the application in use:
 
 Statistics
 
-![Statistics Page][./stats_page.png]  
+![Statistics Page](./stats_page.png)  
 The statistics page includes the following (top to bottom):
 
 * A graph showing the frequency of photos taken over time  
@@ -74,17 +74,17 @@ The statistics page includes the following (top to bottom):
 
 Clusters
 
-![Clusters Page][./cluster_page.jpg]
+![Clusters Page](./cluster_page.jpg)
 
 * The bottom half of the screen provides a list of generated “clusters” each representing a location with many photos. The number of photos and time frame are listed, and other clusters can be selected by clicking them with the touch screen.  
 * The top half of the screen shows the location represented by the cluster. Each data point on the map corresponds to a photo in the user’s camera roll.
 
 Map View  
-![Light Mode View][./light_mode.PNG]![Dark Mode View][./dark_mode.PNG]  
+![Light Mode View](./light_mode.PNG)![Dark Mode View](./dark_mode.PNG)  
 Above: map views of “standard” and “dark” map themes. These are both representations of the “scatter” function, where each red dot represents a photo in the user’s photo library.  
 	Clicking the upper right menu icon will open a dropdown menu
 
-![Visualizations Screen][./visualizations_screen.PNG]
+![Visualizations Screen](./visualizations_screen.PNG)
 
 Options in this dropdown menu include (from top to bottom):
 
@@ -99,4 +99,4 @@ Settings
 
 Settings can be found on the far right menu button. All shown options can be selected using the touch screen
 
-![Settings Page][./settings.PNG]
+![Settings Page](./settings.PNG)
