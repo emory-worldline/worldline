@@ -80,11 +80,11 @@ Clusters
 * The top half of the screen shows the location represented by the cluster. Each data point on the map corresponds to a photo in the user’s camera roll.
 
 Map View  
-![Light Mode View](./light_mode.PNG)![Dark Mode View](./dark_mode.PNG)  
+![Light Mode View](./light_mode.png)![Dark Mode View](./dark_mode.png)  
 Above: map views of “standard” and “dark” map themes. These are both representations of the “scatter” function, where each red dot represents a photo in the user’s photo library.  
 	Clicking the upper right menu icon will open a dropdown menu
 
-![Visualizations Screen](./visualizations_screen.PNG)
+![Visualizations Screen](./visualizations_screen.png)
 
 Options in this dropdown menu include (from top to bottom):
 
@@ -99,4 +99,4 @@ Settings
 
 Settings can be found on the far right menu button. All shown options can be selected using the touch screen
 
-![Settings Page](./settings.PNG)
+![Settings Page](./settings.png)
