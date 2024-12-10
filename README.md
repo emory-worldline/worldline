@@ -2,8 +2,7 @@
 A cross-platform data visualizer that extends your photo library to show you where you have been in space and time.
 
 ### Videos
-[Worldine Demo](https://youtu.be/mvTwVRXcJ_Q)
-
+[Worldine Demo](https://youtu.be/mvTwVRXcJ_Q)  
 [Worldline Codebase Overview](https://youtu.be/UIzN5dq0STs)
 
 ### Environment Setup
@@ -23,5 +22,6 @@ Run `npx expo prebuild --clean` to prebuild the native app directories. Then you
 
 Keep in mind that this is a development build and requires the development server to be running for the app to run. So after it has been build if you want to run it again you can just use `npx expo start` to start the server and then either use the commands in the terminal to open a specific simulator or scan the QR code with a device that already has the native parts of the app built on it.
 
-Further codebase specific documentation is provided here:
-[Docs](Docs.md)
+Further codebase specific documentation is provided here:  
+[Docs User](docs/Worldline%20User%20Documentation.md)  
+[Docs Technical](docs/Worldline%20Technical%20Documentation.md)
