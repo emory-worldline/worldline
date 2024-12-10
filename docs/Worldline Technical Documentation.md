@@ -78,9 +78,7 @@ Timeline mapping depends on the getTimelineColor method in components/LocationVi
 * Map the timeline to a color spectrum, ranging from Colors.TERTIARY\_BLUE (‘\#3555A5’) to Colors.PRIMARY\_GREEN (‘\#06D6A0’)  
 * For each photo, assign a color that appropriately represents when the photo was taken
 
-Cluster view
-
-Clusters are calculated by the findDenseClusters method in worldline/types/LocationCluster.ts
+The cluster view is calculated by the findDenseClusters method in worldline/types/LocationCluster.ts
 
 * Iterate through data points  
 * For each data point that has not been visited, create a new cluster and add all nearby points within a specified radius (default \= 200 meters)  

@@ -63,7 +63,7 @@ The “Map View” page provides a variety of photo data visualizations on the g
 
 Below is a collection of screenshots which depict the application in use:
 
-Statistics
+**Statistics**
 
 ![Statistics Page](./stats_page.png)  
 The statistics page includes the following (top to bottom):
@@ -72,14 +72,14 @@ The statistics page includes the following (top to bottom):
 * A carousel of photo statistics  
 * Pie charts, which include more photo data
 
-Clusters
+**Clusters**
 
 ![Clusters Page](./cluster_page.jpg)
 
 * The bottom half of the screen provides a list of generated “clusters” each representing a location with many photos. The number of photos and time frame are listed, and other clusters can be selected by clicking them with the touch screen.  
 * The top half of the screen shows the location represented by the cluster. Each data point on the map corresponds to a photo in the user’s camera roll.
 
-Map View  
+**Map View**  
 ![Light Mode View](./light_mode.png)![Dark Mode View](./dark_mode.png)  
 Above: map views of “standard” and “dark” map themes. These are both representations of the “scatter” function, where each red dot represents a photo in the user’s photo library.  
 	Clicking the upper right menu icon will open a dropdown menu
@@ -95,7 +95,7 @@ Options in this dropdown menu include (from top to bottom):
 * Toggle 3D buildings  
 * Worldline
 
-Settings
+**Settings**
 
 Settings can be found on the far right menu button. All shown options can be selected using the touch screen
 
