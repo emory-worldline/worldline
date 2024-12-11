@@ -1,10 +1,10 @@
-**Technical Documentation**
+# **Technical Documentation**
 
-**Introduction**
+### **Introduction**
 
 Worldline is a mobile application designed to use photo location data to visualize a user’s travels over time. It was built in React Native and coded primarily in Typescript. For a developer, there are a number of features which should be thoroughly understood in order to modify and update Worldline’s code. The purpose of this documentation is to describe the architecture, dependencies and features of the application, allowing developers to understand and contribute to its code with ease.
 
-**Code Architecture**
+### **Code Architecture**
 
 All Worldline code can be found in the following Github repository:
 
@@ -31,7 +31,7 @@ Worldline’s code consists of the following:
 * .env.example \- developers should have a copy of this file called .env, filling in appropriate values for each item in the example file  
 * package.json \- contains project dependencies
 
-**Library Dependencies**
+### **Library Dependencies**
 
 Worldline dependencies and their versions can be viewed or modified in the repository’s “package.json” file. Key dependencies consist of the following:
 
@@ -47,7 +47,7 @@ Worldline dependencies and their versions can be viewed or modified in the repos
 * “react-native-reanimated” \- animations in react native apps  
 * “react-native-safe-area-context” \- ensures UI consistency across devices
 
-**Methods and Functionality**
+### **Methods and Functionality**
 
 The primary methods in the code of this project relate to how data is collected by the app, and how this data is used to create visualizations. 
 
